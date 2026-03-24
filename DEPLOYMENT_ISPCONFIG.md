@@ -24,7 +24,7 @@ sudo ./scripts/ispconfig-deploy.sh install \
 1. Jděte na https://github.com/settings/tokens/new
 2. Vygenerujte nový token s rozsahem `repo` (plný přístup k repozitářům)
 3. Zkopírujte token a předejte ho skriptu přes `--github-token`
-4. Token se bezpečně uloží na serveru do `~/.git-credentials` s právy `600`
+4. Token se bezpečně uloží do `$APP_DIR/.git-credentials` s právy `600`
 
 Aktualizace:
 
@@ -64,14 +64,14 @@ Dulezite parametry:
 - Token se generuje na GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
 - Vytvořte nový token s rozsahem `repo` (full control of private repositories)
 - **Nikdy** neukládejte token do verzovacího systému (git)
-- Skript bezpečně uloží token do `~/.git-credentials` s právy `600` (čitelný jen pro vlastníka)
+- Skript bezpečně uloží token do `$APP_DIR/.git-credentials` s právy `600` (čitelný jen pro vlastníka)
 - Při update modu se token načte ze uložené konfigurace, takže jej nemusíte znovu zadávat
 - Z bezpečnostních důvodů nezadávejte token přímo do historie shellu; použijte raději `read -s GITHUB_TOKEN`
 
 **Dulezite pri update modu:**
 - Pokud neprovedl `--db-password`, skript zachova existujici DATABASE_URL v `.env` souboru.
 - Pokud je DATABASE_URL chybejici, skript selze.
-- GitHub token se automaticky načte z `.git-credentials` souboru
+- GitHub token se automaticky načte z `$APP_DIR/.git-credentials` souboru
 
 Poznamky:
 - Skript instaluje systemove balicky, Node.js, PM2, nastavi PostgreSQL, provede build frontendu, nastavi Apache reverse proxy a spusti backend pres PM2.

@@ -220,7 +220,8 @@ prepare_app_dir() {
   # Configure git credentials if token provided
   if [[ -n "$GITHUB_TOKEN" ]]; then
     log "Configuring git credentials for GitHub token authentication"
-    local git_creds_file="$run_home/.git-credentials"
+    local git_creds_file="$APP_DIR/.git-credentials"
+    local git_config_file="$APP_DIR/.gitconfig"
     local cred_line
     
     # Extract GitHub hostname from repo URL
@@ -230,31 +231,36 @@ prepare_app_dir() {
     fi
     cred_line="https://x-access-token:${GITHUB_TOKEN}@${github_host}"
     
-    mkdir -p "$run_home"
+    mkdir -p "$APP_DIR"
     touch "$git_creds_file"
+    touch "$git_config_file"
     # Keep a single credential line per host to avoid duplicates.
     sed -i "\\|@${github_host}$|d" "$git_creds_file"
     echo "$cred_line" >> "$git_creds_file"
     chmod 600 "$git_creds_file"
+    chmod 600 "$git_config_file"
     chown "$RUN_USER:$RUN_GROUP" "$git_creds_file"
+    chown "$RUN_USER:$RUN_GROUP" "$git_config_file"
     
     # Configure git to use credentials helper
-    sudo -u "$RUN_USER" env HOME="$run_home" git config --global credential.helper store
+    sudo -u "$RUN_USER" env HOME="$run_home" git config --file "$git_config_file" credential.helper "store --file $git_creds_file"
   fi
 
   if [[ ! -d "$APP_DIR/.git" ]]; then
     log "Cloning repository"
-    sudo -u "$RUN_USER" env HOME="$run_home" bash -c "cd '$APP_DIR' && git clone --branch '$BRANCH' '$REPO_URL' ."
+    sudo -u "$RUN_USER" env HOME="$run_home" GIT_CONFIG_GLOBAL="$APP_DIR/.gitconfig" bash -c "cd '$APP_DIR' && git clone --branch '$BRANCH' '$REPO_URL' ."
   else
     log "Repository already exists, fetching latest branch"
-    sudo -u "$RUN_USER" env HOME="$run_home" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
+    sudo -u "$RUN_USER" env HOME="$run_home" GIT_CONFIG_GLOBAL="$APP_DIR/.gitconfig" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
   fi
 }
 
 update_code() {
   log "Updating source code"
+  local run_home
+  run_home="$(get_run_user_home)"
   [[ -d "$APP_DIR/.git" ]] || die "App directory does not contain a git repository: $APP_DIR"
-  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
+  sudo -u "$RUN_USER" env HOME="$run_home" GIT_CONFIG_GLOBAL="$APP_DIR/.gitconfig" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
 }
 
 setup_database() {
