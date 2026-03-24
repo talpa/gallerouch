@@ -479,15 +479,35 @@ run_health_checks() {
   log "Running health checks"
   local run_home
   local pm2_home
+  local max_attempts
+  local attempt
   run_home="$(get_run_user_home)"
   pm2_home="$APP_DIR/.pm2"
-
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsS "http://127.0.0.1:${BACKEND_PORT}/" >/dev/null
-    echo "Backend responded on port ${BACKEND_PORT}."
-  fi
+  max_attempts=20
+  attempt=1
 
   sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" pm2 status "$PM2_NAME" || true
+
+  if command -v curl >/dev/null 2>&1; then
+    while [[ $attempt -le $max_attempts ]]; do
+      if curl -fsS "http://127.0.0.1:${BACKEND_PORT}/" >/dev/null; then
+        echo "Backend responded on port ${BACKEND_PORT}."
+        return 0
+      fi
+
+      if [[ $attempt -eq 1 ]]; then
+        log "Backend is not ready yet, waiting for startup"
+      fi
+
+      sleep 2
+      attempt=$((attempt + 1))
+    done
+
+    log "Backend did not start in time on port ${BACKEND_PORT}. Showing PM2 diagnostics"
+    sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" pm2 status || true
+    sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" pm2 logs "$PM2_NAME" --lines 120 --nostream || true
+    die "Health check failed: backend is not reachable on 127.0.0.1:${BACKEND_PORT}"
+  fi
 }
 
 main() {

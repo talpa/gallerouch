@@ -112,6 +112,22 @@ sudo chown -R www-data:www-data /var/www/gallerouch/.pm2
 
 Pak spustte deploy znovu.
 
+### Troubleshooting backend health check (curl 127.0.0.1:4777)
+
+Pokud deploy skonci chybou typu `curl: (7) Failed to connect to 127.0.0.1 port 4777`,
+znamena to, ze backend nenabehl vcas nebo po startu spadl.
+
+Aktualni skript uz:
+- ceka na start backendu opakovane (retry),
+- pri selhani automaticky vypise PM2 status a posledni PM2 logy.
+
+Rucni kontrola:
+
+```bash
+sudo -u www-data PM2_HOME=/var/www/gallerouch/.pm2 pm2 status
+sudo -u www-data PM2_HOME=/var/www/gallerouch/.pm2 pm2 logs gallerouch --lines 150 --nostream
+```
+
 ## Příprava na serveru
 
 ### 1. Instalace Node.js a npm
