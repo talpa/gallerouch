@@ -121,6 +121,45 @@ router.get('/my', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/offers/my-sent - Get offers created by current user (buyer)
+router.get('/my-sent', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  const client = await getPool();
+  try {
+    const result = await client.query(
+      `SELECT 
+        po.id,
+        po.artwork_id,
+        po.buyer_id,
+        po.owner_id,
+        po.offered_price,
+        po.message,
+        po.status,
+        po.read_at,
+        po.buyer_read_at,
+        po.created_at,
+        po.updated_at,
+        a.title AS artwork_title,
+        u.username AS owner_username,
+        u.email AS owner_email
+      FROM price_offers po
+      JOIN artworks a ON po.artwork_id = a.id
+      JOIN users u ON po.owner_id = u.id
+      WHERE po.buyer_id = $1
+      ORDER BY po.created_at DESC`,
+      [userId]
+    );
+
+    await client.end();
+    res.json(result.rows);
+  } catch (error) {
+    await client.end();
+    console.error('Error fetching sent offers:', error);
+    res.status(500).json({ error: 'Chyba při načítání odeslaných nabídek' });
+  }
+});
+
 // GET /api/offers/unread-count - Get count of unread offers
 router.get('/unread-count', authenticateToken, async (req, res) => {
   const userId = req.user.id;
@@ -128,7 +167,12 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
   const client = await getPool();
   try {
     const result = await client.query(
-      'SELECT COUNT(*) as count FROM price_offers WHERE owner_id = $1 AND read_at IS NULL',
+      `SELECT COUNT(*) as count
+       FROM price_offers
+       WHERE
+         (owner_id = $1 AND read_at IS NULL)
+         OR
+         (buyer_id = $1 AND status IN ('accepted', 'rejected') AND buyer_read_at IS NULL)`,
       [userId]
     );
 
@@ -138,6 +182,42 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
     await client.end();
     console.error('Error fetching unread count:', error);
     res.status(500).json({ error: 'Chyba při načítání počtu nepřečtených nabídek' });
+  }
+});
+
+// PATCH /api/offers/:id/read-buyer - Mark buyer status update as read
+router.patch('/:id/read-buyer', authenticateToken, async (req, res) => {
+  const offerId = req.params.id;
+  const userId = req.user.id;
+
+  const client = await getPool();
+  try {
+    const checkResult = await client.query(
+      'SELECT buyer_id FROM price_offers WHERE id = $1',
+      [offerId]
+    );
+
+    if (checkResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({ error: 'Nabídka nenalezena' });
+    }
+
+    if (checkResult.rows[0].buyer_id !== userId) {
+      await client.end();
+      return res.status(403).json({ error: 'Nemáte oprávnění k této nabídce' });
+    }
+
+    const result = await client.query(
+      'UPDATE price_offers SET buyer_read_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *',
+      [offerId]
+    );
+
+    await client.end();
+    res.json(result.rows[0]);
+  } catch (error) {
+    await client.end();
+    console.error('Error marking buyer status as read:', error);
+    res.status(500).json({ error: 'Chyba při označování aktualizace statusu jako přečtené' });
   }
 });
 
@@ -211,7 +291,12 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
 
     // Update status
     const result = await client.query(
-      'UPDATE price_offers SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      `UPDATE price_offers
+       SET status = $1,
+           updated_at = CURRENT_TIMESTAMP,
+           buyer_read_at = NULL
+       WHERE id = $2
+       RETURNING *`,
       [status, offerId]
     );
 

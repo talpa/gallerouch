@@ -67,7 +67,7 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                   <Link 
                     to="/offers" 
                     className="menu-btn offers-btn"
-                    title={t('offers.offersReceived')}
+                    title={t('offers.myOffers')}
                   >
                     💰 {unreadOffersCount}
                   </Link>

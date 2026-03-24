@@ -4,14 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
-import { getMyOffers, markOfferAsRead, updateOfferStatus, PriceOffer } from '../api/offers';
+import { getMyOffers, getMySentOffers, markOfferAsRead, markBuyerOfferStatusAsRead, updateOfferStatus, PriceOffer } from '../api/offers';
 import PublicLayout from '../components/PublicLayout';
 
 export const MyOffersPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const auth = useSelector((state: RootState) => state.auth);
-  const [offers, setOffers] = useState<PriceOffer[]>([]);
+  const [receivedOffers, setReceivedOffers] = useState<PriceOffer[]>([]);
+  const [sentOffers, setSentOffers] = useState<PriceOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,8 +25,12 @@ export const MyOffersPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const data = await getMyOffers(auth.token);
-      setOffers(data);
+      const [received, sent] = await Promise.all([
+        getMyOffers(auth.token),
+        getMySentOffers(auth.token)
+      ]);
+      setReceivedOffers(received);
+      setSentOffers(sent);
       setError(null);
     } catch (err) {
       setError(t('common.error'));
@@ -40,9 +45,20 @@ export const MyOffersPage: React.FC = () => {
 
     try {
       await markOfferAsRead(offerId, auth.token);
-      setOffers(offers.map((o) => (o.id === offerId ? { ...o, read_at: new Date().toISOString() } : o)));
+      setReceivedOffers(receivedOffers.map((o) => (o.id === offerId ? { ...o, read_at: new Date().toISOString() } : o)));
     } catch (err) {
       console.error('Error marking offer as read:', err);
+    }
+  };
+
+  const handleMarkBuyerStatusAsRead = async (offerId: number) => {
+    if (!auth.token) return;
+
+    try {
+      await markBuyerOfferStatusAsRead(offerId, auth.token);
+      setSentOffers(sentOffers.map((o) => (o.id === offerId ? { ...o, buyer_read_at: new Date().toISOString() } : o)));
+    } catch (err) {
+      console.error('Error marking buyer status as read:', err);
     }
   };
 
@@ -51,7 +67,7 @@ export const MyOffersPage: React.FC = () => {
 
     try {
       const updated = await updateOfferStatus(offerId, status, auth.token);
-      setOffers(offers.map((o) => (o.id === offerId ? updated : o)));
+      setReceivedOffers(receivedOffers.map((o) => (o.id === offerId ? updated : o)));
     } catch (err) {
       console.error('Error updating offer status:', err);
     }
@@ -124,11 +140,14 @@ export const MyOffersPage: React.FC = () => {
           <Spinner animation="border" />
           <p className="mt-2">{t('common.loading')}</p>
         </div>
-      ) : offers.length === 0 ? (
-        <Alert variant="info">{t('offers.noOffers')}</Alert>
       ) : (
-        <Card className="shadow-sm">
+        <>
+        <Card className="shadow-sm mb-4">
           <Card.Body>
+            <h5 className="mb-3">{t('offers.offersReceived')}</h5>
+            {receivedOffers.length === 0 ? (
+              <Alert variant="info" className="mb-0">{t('offers.noOffers')}</Alert>
+            ) : (
             <Table striped bordered hover responsive className="mb-0">
             <thead>
               <tr>
@@ -141,7 +160,7 @@ export const MyOffersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {offers.map((offer) => (
+              {receivedOffers.map((offer) => (
                 <tr key={offer.id} className={!offer.read_at ? 'unread-offer' : ''}>
                   <td>
                     <strong>{offer.artwork_title}</strong>
@@ -214,8 +233,75 @@ export const MyOffersPage: React.FC = () => {
               ))}
             </tbody>
           </Table>
+            )}
           </Card.Body>
         </Card>
+
+        <Card className="shadow-sm">
+          <Card.Body>
+            <h5 className="mb-3">{t('offers.myOffers')}</h5>
+            {sentOffers.length === 0 ? (
+              <Alert variant="info" className="mb-0">{t('offers.noOffers')}</Alert>
+            ) : (
+              <Table striped bordered hover responsive className="mb-0">
+                <thead>
+                  <tr>
+                    <th>{t('offers.artwork')}</th>
+                    <th>Majitel</th>
+                    <th>{t('offers.offeredPrice')}</th>
+                    <th>{t('offers.createdAt')}</th>
+                    <th>{t('offers.status')}</th>
+                    <th>{t('common.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sentOffers.map((offer) => {
+                    const hasUnreadStatus = (offer.status === 'accepted' || offer.status === 'rejected') && !offer.buyer_read_at;
+                    return (
+                      <tr key={offer.id} className={hasUnreadStatus ? 'unread-offer' : ''}>
+                        <td>
+                          <strong>{offer.artwork_title}</strong>
+                          {hasUnreadStatus && (
+                            <Badge bg="danger" className="ms-2">
+                              {t('offers.unread')}
+                            </Badge>
+                          )}
+                        </td>
+                        <td>
+                          <div>{offer.owner_username}</div>
+                          <small className="text-muted">{offer.owner_email}</small>
+                        </td>
+                        <td>
+                          <strong>{formatPrice(offer.offered_price)}</strong>
+                        </td>
+                        <td>{formatDate(offer.created_at)}</td>
+                        <td>{getStatusBadge(offer.status)}</td>
+                        <td>
+                          {hasUnreadStatus ? (
+                            <Button
+                              variant="info"
+                              size="sm"
+                              onClick={() => handleMarkBuyerStatusAsRead(offer.id)}
+                              className="d-flex align-items-center justify-content-center py-1 px-2"
+                              style={{ fontSize: '0.8rem' }}
+                            >
+                              <span className="me-1">👁</span> {t('offers.markAsRead')}
+                            </Button>
+                          ) : (
+                            <small className="text-muted">
+                              {offer.status === 'pending' ? t('offers.statusPending') : '✓'}
+                            </small>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            )}
+          </Card.Body>
+        </Card>
+        </>
       )}
       </Container>
     </PublicLayout>
