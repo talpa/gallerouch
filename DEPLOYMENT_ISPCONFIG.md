@@ -66,6 +66,7 @@ Dulezite parametry:
 - **Nikdy** neukládejte token do verzovacího systému (git)
 - Skript bezpečně uloží token do `~/.git-credentials` s právy `600` (čitelný jen pro vlastníka)
 - Při update modu se token načte ze uložené konfigurace, takže jej nemusíte znovu zadávat
+- Z bezpečnostních důvodů nezadávejte token přímo do historie shellu; použijte raději `read -s GITHUB_TOKEN`
 
 **Dulezite pri update modu:**
 - Pokud neprovedl `--db-password`, skript zachova existujici DATABASE_URL v `.env` souboru.
@@ -77,6 +78,16 @@ Poznamky:
 - Migrace databaze se spusti automaticky pri startu backendu (backend/src/migrate.js); uz existujici migrace se nespusti znovu.
 - Pokud ISPConfig prepisuje Apache vhost, zkopiruj direktivy z vygenerovaneho souboru `/etc/apache2/sites-available/gallerouch.com.conf` do pole Apache Directives u daneho webu v ISPConfig.
 - Pokud chcete upgradrovat heslo DB pri dalsi aktualizaci, pouzijte `--db-password` s novym heslem a skript jej aktualizuje.
+
+### Troubleshooting npm EACCES
+
+Pokud narazite na chybu typu `npm ERR! EACCES ... /var/www/.npm`, opravte prava jednorazove:
+
+```bash
+sudo chown -R www-data:www-data /var/www/.npm
+```
+
+Aktualni verze skriptu uz pouziva vlastni cache v `$APP_DIR/.npm-cache`, takze se chyba pri dalsich deployich nema opakovat.
 
 ## Příprava na serveru
 

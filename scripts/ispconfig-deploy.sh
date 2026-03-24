@@ -81,6 +81,13 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
 }
 
+get_run_user_home() {
+  local home_dir
+  home_dir="$(getent passwd "$RUN_USER" | cut -d: -f6)"
+  [[ -n "$home_dir" ]] || die "Unable to resolve home directory for user: $RUN_USER"
+  echo "$home_dir"
+}
+
 load_config() {
   local config_file="$APP_DIR/.deploy-config"
   if [[ -f "$config_file" ]]; then
@@ -204,36 +211,43 @@ install_system_packages() {
 
 prepare_app_dir() {
   log "Preparing application directory"
+  local run_home
+  run_home="$(get_run_user_home)"
+
   mkdir -p "$APP_DIR"
   chown -R "$RUN_USER:$RUN_GROUP" "$APP_DIR"
 
   # Configure git credentials if token provided
   if [[ -n "$GITHUB_TOKEN" ]]; then
     log "Configuring git credentials for GitHub token authentication"
-    local git_creds_file="$HOME/.git-credentials"
+    local git_creds_file="$run_home/.git-credentials"
+    local cred_line
     
     # Extract GitHub hostname from repo URL
     local github_host="github.com"
     if [[ "$REPO_URL" =~ https://([^/]+)/ ]]; then
       github_host="${BASH_REMATCH[1]}"
     fi
+    cred_line="https://x-access-token:${GITHUB_TOKEN}@${github_host}"
     
-    # Store credentials in git-credentials file
-    cat >> "$git_creds_file" <<CREDS
-https://$GITHUB_TOKEN@$github_host
-CREDS
+    mkdir -p "$run_home"
+    touch "$git_creds_file"
+    # Keep a single credential line per host to avoid duplicates.
+    sed -i "\\|@${github_host}$|d" "$git_creds_file"
+    echo "$cred_line" >> "$git_creds_file"
     chmod 600 "$git_creds_file"
+    chown "$RUN_USER:$RUN_GROUP" "$git_creds_file"
     
     # Configure git to use credentials helper
-    git config --global credential.helper store
+    sudo -u "$RUN_USER" env HOME="$run_home" git config --global credential.helper store
   fi
 
   if [[ ! -d "$APP_DIR/.git" ]]; then
     log "Cloning repository"
-    sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git clone --branch '$BRANCH' '$REPO_URL' ."
+    sudo -u "$RUN_USER" env HOME="$run_home" bash -c "cd '$APP_DIR' && git clone --branch '$BRANCH' '$REPO_URL' ."
   else
     log "Repository already exists, fetching latest branch"
-    sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
+    sudo -u "$RUN_USER" env HOME="$run_home" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
   fi
 }
 
@@ -307,14 +321,27 @@ ensure_backend_env() {
 }
 
 install_node_dependencies_and_build() {
+  local run_home
+  local npm_cache
+  run_home="$(get_run_user_home)"
+  npm_cache="$APP_DIR/.npm-cache"
+
+  mkdir -p "$npm_cache"
+  chown -R "$RUN_USER:$RUN_GROUP" "$npm_cache"
+
+  # Repair legacy npm cache ownership from previous root runs.
+  if [[ -d "/var/www/.npm" ]]; then
+    chown -R "$RUN_USER:$RUN_GROUP" "/var/www/.npm" || true
+  fi
+
   log "Installing backend dependencies"
-  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/backend' && npm ci --omit=dev"
+  sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/backend' && npm ci --omit=dev"
 
   log "Installing frontend dependencies"
-  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/frontend' && npm ci"
+  sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/frontend' && npm ci"
 
   log "Building frontend"
-  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/frontend' && npm run build"
+  sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/frontend' && npm run build"
 
   if [[ -n "$ISP_DOCROOT" ]]; then
     log "Deploying frontend build to ISPConfig docroot: $ISP_DOCROOT"
