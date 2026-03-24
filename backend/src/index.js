@@ -10,7 +10,7 @@ import authApi from './auth.js';
 import uploadsApi from './uploads.js';
 import eventsApi from './events.js';
 import settingsApi from './settings.js';
-import paymentsApi from './payments.js';
+import paymentsApi, { syncFioPayments } from './payments.js';
 import offersApi from './offers.js';
 import pkg from 'pg';
 const { Client } = pkg;
@@ -87,4 +87,27 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 4777;
 app.listen(PORT, () => {
   console.log(`Backend server running on port ${PORT}`);
+
+  // Automatická synchronizace s Fio bankou každé 2 hodiny
+  // Běží interně - nepotřebuje JWT ani externí cron job
+  const FIO_SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 hodiny
+
+  const runFioSync = async () => {
+    try {
+      const result = await syncFioPayments();
+      if (result.skipped) {
+        // FIO_API_TOKEN není nastaven - tichý log, není to chyba
+        return;
+      }
+      console.log(`[Fio Sync] ${result.message}`);
+    } catch (err) {
+      console.error('[Fio Sync] Chyba při synchronizaci:', err.message);
+    }
+  };
+
+  // První sync za 30 sekund po startu (ne hned - DB se teprve rozjíždí)
+  setTimeout(runFioSync, 30 * 1000);
+
+  // Pak každé 2 hodiny
+  setInterval(runFioSync, FIO_SYNC_INTERVAL_MS);
 });

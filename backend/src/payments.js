@@ -561,93 +561,65 @@ router.put('/payments/:id/invoice', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/payments/sync-fio - Sync payments with Fio Bank (admin only)
-// This endpoint checks for incoming transactions and matches them with payments
-router.post('/sync-fio', authenticateToken, async (req, res) => {
-  const isAdmin = req.user.role === 'admin';
-  
-  if (!isAdmin) {
-    return res.status(403).json({ error: 'Admin access required' });
+// Interní funkce pro synchronizaci plateb s Fio bankou
+// Volaná automaticky backendem každé 2 hodiny - bez potřeby JWT nebo HTTP callbacku
+export async function syncFioPayments() {
+  const fioToken = process.env.FIO_API_TOKEN;
+  if (!fioToken) {
+    console.log('[Fio Sync] FIO_API_TOKEN není nakonfigurován, přeskakuji sync');
+    return { success: false, skipped: true, message: 'FIO_API_TOKEN not configured' };
   }
-  
+
   const client = new Client({ connectionString: process.env.DATABASE_URL });
-  
+
   try {
     await client.connect();
-    
-    // Check if Fio API is configured
-    const fioToken = process.env.FIO_API_TOKEN;
-    if (!fioToken) {
-      await client.end();
-      return res.status(400).json({ error: 'FIO_API_TOKEN not configured in .env' });
-    }
-    
-    // Initialize Fio API
+
     const fio = new FioApi(fioToken);
-    
-    // Get transactions from last 7 days
+
+    // Načíst transakce za posledních 7 dní
     const sinceDate = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
     const transactions = await fio.getRecentTransactions(sinceDate);
-    
-    // Filter incoming payments only
+
     const incomingTransactions = fio.filterIncomingPayments(transactions);
-    
-    // Filter transactions with variable symbol
     const transactionsWithSymbol = fio.filterTransactionsWithSymbol(
       incomingTransactions.map(tx => fio.parseTransaction(tx))
     );
-    
-    // Match transactions with payments and update them
+
     const matched = [];
     const unmatched = [];
-    
+
     for (const tx of transactionsWithSymbol) {
-      // Find payment by variable symbol
       const paymentResult = await client.query(
-        `SELECT * FROM payments 
-         WHERE variable_symbol = $1 AND status = 'unpaid'
-         LIMIT 1`,
+        `SELECT * FROM payments WHERE variable_symbol = $1 AND status = 'unpaid' LIMIT 1`,
         [tx.variableSymbol]
       );
-      
+
       if (paymentResult.rows.length > 0) {
         const payment = paymentResult.rows[0];
-        
-        // Check if amount matches (with small tolerance for fees)
         const amountDiff = Math.abs(parseFloat(payment.price) - tx.amount);
-        const tolerance = 1; // Allow 1 CZK difference for bank fees
-        
-        if (amountDiff <= tolerance) {
-          // Update payment as paid
+
+        if (amountDiff <= 1) {
           const updateResult = await client.query(
             `UPDATE payments 
-             SET status = 'paid', 
-                 paid_at = NOW(),
-                 payment_method = 'bank_transfer',
-                 fio_transaction_id = $1,
-                 fio_matched_at = NOW(),
-                 fio_amount_matched = $2,
-                 confirmed_by = $3,
-                 confirmed_at = NOW(),
-                 transaction_id = $1
-             WHERE id = $4
-             RETURNING *`,
-            [tx.transactionId, tx.amount, 1, payment.id] // user_id = 1 (system/admin)
+             SET status = 'paid', paid_at = NOW(), payment_method = 'bank_transfer',
+                 fio_transaction_id = $1, fio_matched_at = NOW(), fio_amount_matched = $2,
+                 confirmed_by = $3, confirmed_at = NOW(), transaction_id = $1
+             WHERE id = $4 RETURNING *`,
+            [tx.transactionId, tx.amount, 1, payment.id]
           );
-          
+
           if (updateResult.rows.length > 0) {
-            // Transfer artwork ownership to buyer
             await client.query(
               'UPDATE artworks SET user_id = $1 WHERE id = $2',
               [payment.buyer_id, payment.artwork_id]
             );
-            
-            // Create ownership_change event
+
             const artworkResult = await client.query(
               'SELECT title FROM artworks WHERE id = $1',
               [payment.artwork_id]
             );
-            
+
             if (artworkResult.rows.length > 0) {
               const eventDetails = JSON.stringify({
                 title: artworkResult.rows[0].title,
@@ -656,7 +628,6 @@ router.post('/sync-fio', authenticateToken, async (req, res) => {
                 newOwnerId: payment.buyer_id,
                 reason: 'Payment confirmed via Fio Bank'
               });
-
               await client.query(
                 `INSERT INTO events 
                  (artwork_id, type, status, details, created_by, owner_id, price, approved_at, approved_by) 
@@ -664,50 +635,41 @@ router.post('/sync-fio', authenticateToken, async (req, res) => {
                 [payment.artwork_id, 'ownership_change', 'approved', eventDetails, 1, payment.buyer_id, payment.price, 1]
               );
             }
-            
-            matched.push({
-              paymentId: payment.id,
-              variableSymbol: tx.variableSymbol,
-              amount: tx.amount,
-              senderName: tx.senderName,
-              date: tx.date
-            });
+
+            matched.push({ paymentId: payment.id, variableSymbol: tx.variableSymbol, amount: tx.amount, senderName: tx.senderName, date: tx.date });
           }
         } else {
-          // Amount mismatch
-          unmatched.push({
-            variableSymbol: tx.variableSymbol,
-            amount: tx.amount,
-            expectedAmount: payment.price,
-            reason: 'Amount mismatch',
-            senderName: tx.senderName,
-            date: tx.date
-          });
+          unmatched.push({ variableSymbol: tx.variableSymbol, amount: tx.amount, expectedAmount: payment.price, reason: 'Amount mismatch', senderName: tx.senderName, date: tx.date });
         }
       } else {
-        // No matching payment found
-        unmatched.push({
-          variableSymbol: tx.variableSymbol,
-          amount: tx.amount,
-          reason: 'No matching payment or already paid',
-          senderName: tx.senderName,
-          date: tx.date
-        });
+        unmatched.push({ variableSymbol: tx.variableSymbol, amount: tx.amount, reason: 'No matching payment or already paid', senderName: tx.senderName, date: tx.date });
       }
     }
-    
+
     await client.end();
-    
-    res.json({
-      success: true,
-      message: `Synced ${matched.length} payments, ${unmatched.length} unmatched`,
-      matched: matched,
-      unmatched: unmatched,
-      totalProcessed: incomingTransactions.length
-    });
+    const message = `Synced ${matched.length} payments, ${unmatched.length} unmatched`;
+    return { success: true, message, matched, unmatched, totalProcessed: incomingTransactions.length };
   } catch (err) {
     await client.end();
-    console.error('Fio sync error:', err);
+    throw err;
+  }
+}
+
+// POST /api/payments/sync-fio - Ruční spuštění syncu (chráněno CRON_SECRET, ne JWT)
+// Pro automatický sync backend volá syncFioPayments() interně přes setInterval
+router.post('/sync-fio', (req, res, next) => {
+  const secret = process.env.CRON_SECRET;
+  const provided = req.headers['x-cron-secret'];
+  if (!secret || !provided || provided !== secret) {
+    return res.status(401).json({ error: 'Unauthorized - x-cron-secret header required' });
+  }
+  next();
+}, async (req, res) => {
+  try {
+    const result = await syncFioPayments();
+    res.json(result);
+  } catch (err) {
+    console.error('[Fio Sync] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
