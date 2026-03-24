@@ -7,6 +7,34 @@ import { Strategy as FacebookStrategy } from 'passport-facebook';
 import pkg from 'pg';
 const { Client } = pkg;
 
+function normalizeUsername(value, fallback) {
+  const normalized = (value || fallback || 'user')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40);
+  return normalized || fallback || 'user';
+}
+
+async function ensureUniqueUsername(client, preferred) {
+  const base = normalizeUsername(preferred, 'user');
+  let candidate = base;
+  let attempt = 1;
+
+  while (attempt <= 50) {
+    const exists = await client.query('SELECT 1 FROM users WHERE username = $1 LIMIT 1', [candidate]);
+    if (exists.rows.length === 0) {
+      return candidate;
+    }
+    attempt += 1;
+    candidate = `${base}_${attempt}`;
+  }
+
+  return `${base}_${Date.now()}`;
+}
+
 // Google OAuth Strategy (pouze pokud jsou nastavené credentials)
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
@@ -33,10 +61,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         user = result.rows[0];
       } else {
         // Vytvoř nového uživatele
+        const uniqueUsername = await ensureUniqueUsername(client, googleUsername);
         const insertResult = await client.query(
           'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
           [
-            googleUsername,
+            uniqueUsername,
             googleEmail,
             'oauth-google',
             'user',
@@ -90,10 +119,11 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         user = result.rows[0];
       } else {
         // Vytvoř nového uživatele
+        const uniqueUsername = await ensureUniqueUsername(client, facebookUsername);
         const insertResult = await client.query(
           'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
           [
-            facebookUsername,
+            uniqueUsername,
             facebookEmail,
             'oauth-facebook',
             'user',
