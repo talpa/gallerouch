@@ -18,11 +18,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     const client = new Client({ connectionString: process.env.DATABASE_URL });
     try {
       await client.connect();
+      const googleEmail = (profile.emails?.[0]?.value || '').trim().toLowerCase() || `google_${profile.id}@google.local`;
+      const googleUsername = profile.displayName || googleEmail.split('@')[0] || `google_${profile.id}`;
       
       // Zkontroluj jestli uživatel existuje
       const result = await client.query(
         'SELECT * FROM users WHERE email = $1',
-        [profile.emails?.[0]?.value]
+        [googleEmail]
       );
       
       let user;
@@ -34,8 +36,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         const insertResult = await client.query(
           'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
           [
-            profile.displayName || profile.emails?.[0]?.value?.split('@')[0],
-            profile.emails?.[0]?.value,
+            googleUsername,
+            googleEmail,
             'oauth-google',
             'user',
             'google'
@@ -73,11 +75,13 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
     const client = new Client({ connectionString: process.env.DATABASE_URL });
     try {
       await client.connect();
+      const facebookEmail = (profile.emails?.[0]?.value || '').trim().toLowerCase() || `facebook_${profile.id}@facebook.local`;
+      const facebookUsername = profile.displayName || facebookEmail.split('@')[0] || `facebook_${profile.id}`;
       
       // Zkontroluj jestli uživatel existuje
       const result = await client.query(
         'SELECT * FROM users WHERE email = $1',
-        [profile.emails?.[0]?.value]
+        [facebookEmail]
       );
       
       let user;
@@ -89,8 +93,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         const insertResult = await client.query(
           'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
           [
-            profile.displayName || profile.emails?.[0]?.value?.split('@')[0],
-            profile.emails?.[0]?.value,
+            facebookUsername,
+            facebookEmail,
             'oauth-facebook',
             'user',
             'facebook'
