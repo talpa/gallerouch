@@ -25,13 +25,27 @@ export const MyOffersPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const [received, sent] = await Promise.all([
+      const [receivedResult, sentResult] = await Promise.allSettled([
         getMyOffers(auth.token),
         getMySentOffers(auth.token)
       ]);
-      setReceivedOffers(received);
-      setSentOffers(sent);
-      setError(null);
+
+      if (receivedResult.status === 'fulfilled') {
+        setReceivedOffers(receivedResult.value);
+      } else {
+        setReceivedOffers([]);
+        console.error('Error fetching received offers:', receivedResult.reason);
+      }
+
+      if (sentResult.status === 'fulfilled') {
+        setSentOffers(sentResult.value);
+      } else {
+        setSentOffers([]);
+        console.error('Error fetching sent offers:', sentResult.reason);
+      }
+
+      const bothFailed = receivedResult.status === 'rejected' && sentResult.status === 'rejected';
+      setError(bothFailed ? t('common.error') : null);
     } catch (err) {
       setError(t('common.error'));
       console.error('Error fetching offers:', err);
@@ -46,6 +60,7 @@ export const MyOffersPage: React.FC = () => {
     try {
       await markOfferAsRead(offerId, auth.token);
       setReceivedOffers(receivedOffers.map((o) => (o.id === offerId ? { ...o, read_at: new Date().toISOString() } : o)));
+      window.dispatchEvent(new Event('offers-updated'));
     } catch (err) {
       console.error('Error marking offer as read:', err);
     }
@@ -57,6 +72,7 @@ export const MyOffersPage: React.FC = () => {
     try {
       await markBuyerOfferStatusAsRead(offerId, auth.token);
       setSentOffers(sentOffers.map((o) => (o.id === offerId ? { ...o, buyer_read_at: new Date().toISOString() } : o)));
+      window.dispatchEvent(new Event('offers-updated'));
     } catch (err) {
       console.error('Error marking buyer status as read:', err);
     }
@@ -68,6 +84,7 @@ export const MyOffersPage: React.FC = () => {
     try {
       const updated = await updateOfferStatus(offerId, status, auth.token);
       setReceivedOffers(receivedOffers.map((o) => (o.id === offerId ? updated : o)));
+      window.dispatchEvent(new Event('offers-updated'));
     } catch (err) {
       console.error('Error updating offer status:', err);
     }

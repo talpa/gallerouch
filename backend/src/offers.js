@@ -13,6 +13,16 @@ async function getPool() {
   return client;
 }
 
+async function hasBuyerReadAtColumn(client) {
+  const result = await client.query(
+    `SELECT 1
+     FROM information_schema.columns
+     WHERE table_name = 'price_offers' AND column_name = 'buyer_read_at'
+     LIMIT 1`
+  );
+  return result.rows.length > 0;
+}
+
 // POST /api/offers - Create a new price offer
 router.post('/', authenticateToken, async (req, res) => {
   const { artworkId, offeredPrice, message } = req.body;
@@ -127,6 +137,11 @@ router.get('/my-sent', authenticateToken, async (req, res) => {
 
   const client = await getPool();
   try {
+    const buyerReadAtExists = await hasBuyerReadAtColumn(client);
+    const buyerReadAtSelect = buyerReadAtExists
+      ? 'po.buyer_read_at,'
+      : 'NULL::timestamp AS buyer_read_at,';
+
     const result = await client.query(
       `SELECT 
         po.id,
@@ -137,7 +152,7 @@ router.get('/my-sent', authenticateToken, async (req, res) => {
         po.message,
         po.status,
         po.read_at,
-        po.buyer_read_at,
+        ${buyerReadAtSelect}
         po.created_at,
         po.updated_at,
         a.title AS artwork_title,
@@ -166,15 +181,22 @@ router.get('/unread-count', authenticateToken, async (req, res) => {
 
   const client = await getPool();
   try {
-    const result = await client.query(
-      `SELECT COUNT(*) as count
-       FROM price_offers
-       WHERE
-         (owner_id = $1 AND read_at IS NULL)
-         OR
-         (buyer_id = $1 AND status IN ('accepted', 'rejected') AND buyer_read_at IS NULL)`,
-      [userId]
-    );
+    const buyerReadAtExists = await hasBuyerReadAtColumn(client);
+
+    const result = buyerReadAtExists
+      ? await client.query(
+          `SELECT COUNT(*) as count
+           FROM price_offers
+           WHERE
+             (owner_id = $1 AND read_at IS NULL)
+             OR
+             (buyer_id = $1 AND status IN ('accepted', 'rejected') AND buyer_read_at IS NULL)`,
+          [userId]
+        )
+      : await client.query(
+          'SELECT COUNT(*) as count FROM price_offers WHERE owner_id = $1 AND read_at IS NULL',
+          [userId]
+        );
 
     await client.end();
     res.json({ count: parseInt(result.rows[0].count) });
@@ -192,6 +214,12 @@ router.patch('/:id/read-buyer', authenticateToken, async (req, res) => {
 
   const client = await getPool();
   try {
+    const buyerReadAtExists = await hasBuyerReadAtColumn(client);
+    if (!buyerReadAtExists) {
+      await client.end();
+      return res.json({ success: true, message: 'buyer_read_at column not available yet' });
+    }
+
     const checkResult = await client.query(
       'SELECT buyer_id FROM price_offers WHERE id = $1',
       [offerId]
@@ -290,15 +318,25 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     }
 
     // Update status
-    const result = await client.query(
-      `UPDATE price_offers
-       SET status = $1,
-           updated_at = CURRENT_TIMESTAMP,
-           buyer_read_at = NULL
-       WHERE id = $2
-       RETURNING *`,
-      [status, offerId]
-    );
+    const buyerReadAtExists = await hasBuyerReadAtColumn(client);
+    const result = buyerReadAtExists
+      ? await client.query(
+          `UPDATE price_offers
+           SET status = $1,
+               updated_at = CURRENT_TIMESTAMP,
+               buyer_read_at = NULL
+           WHERE id = $2
+           RETURNING *`,
+          [status, offerId]
+        )
+      : await client.query(
+          `UPDATE price_offers
+           SET status = $1,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2
+           RETURNING *`,
+          [status, offerId]
+        );
 
     const updatedOffer = result.rows[0];
 

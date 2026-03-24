@@ -19,8 +19,18 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       loadUnreadOffersCount();
       // Refresh every 30 seconds
       const interval = setInterval(loadUnreadOffersCount, 30000);
-      return () => clearInterval(interval);
+      const refreshHandler = () => {
+        loadUnreadOffersCount();
+      };
+      window.addEventListener('offers-updated', refreshHandler);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('offers-updated', refreshHandler);
+      };
     }
+
+    setUnreadOffersCount(0);
+    return undefined;
   }, [user, token]);
 
   const loadUnreadOffersCount = async () => {
