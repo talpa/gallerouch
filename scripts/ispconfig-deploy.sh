@@ -5,7 +5,7 @@ set -euo pipefail
 # Supports first-time installation and safe updates.
 
 MODE=""
-DOMAIN="gallerouch.com"
+DOMAIN="gallerouch.cz"
 APP_DIR="/var/www/gallerouch"
 REPO_URL=""
 BRANCH="main"
@@ -38,7 +38,7 @@ Optional (for GitHub private repos):
   --github-token TOKEN      GitHub Personal Access Token (for https cloning)
 
 Options:
-  --domain DOMAIN           Domain name (default: gallerouch.com)
+  --domain DOMAIN           Domain name (default: gallerouch.cz)
   --app-dir PATH            App directory on server (default: /var/www/gallerouch)
   --branch NAME             Git branch (default: main)
   --run-user USER           Runtime user for app/pm2 (default: www-data)
@@ -59,7 +59,7 @@ Options:
 Examples:
   sudo ./scripts/ispconfig-deploy.sh install \
     --repo-url https://github.com/your-org/gallerouch.git \
-    --domain gallerouch.com \
+    --domain gallerouch.cz \
     --db-password 'StrongPassword123' \
     --github-token 'ghp_xxxxxxxxxxxx' \
     --isp-docroot /var/www/clients/client1/web1/web
@@ -409,6 +409,13 @@ write_apache_vhost() {
     ServerAlias www.${DOMAIN}
     DocumentRoot ${docroot}
 
+    ProxyPreserveHost On
+    ProxyPass /api http://127.0.0.1:${BACKEND_PORT}/api
+    ProxyPassReverse /api http://127.0.0.1:${BACKEND_PORT}/api
+
+    ProxyPass /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
+    ProxyPassReverse /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
+
     <Directory ${docroot}>
         Options Indexes FollowSymLinks
         AllowOverride All
@@ -418,18 +425,13 @@ write_apache_vhost() {
             RewriteEngine On
             RewriteBase /
             RewriteRule ^index\\.html$ - [L]
+            RewriteCond %{REQUEST_URI} !^/api
+            RewriteCond %{REQUEST_URI} !^/uploads
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteCond %{REQUEST_FILENAME} !-d
             RewriteRule . /index.html [L]
         </IfModule>
     </Directory>
-
-    ProxyPreserveHost On
-    ProxyPass /api http://127.0.0.1:${BACKEND_PORT}/api
-    ProxyPassReverse /api http://127.0.0.1:${BACKEND_PORT}/api
-
-    ProxyPass /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
-    ProxyPassReverse /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
 
     ErrorLog \${APACHE_LOG_DIR}/${DOMAIN}_error.log
     CustomLog \${APACHE_LOG_DIR}/${DOMAIN}_access.log combined
@@ -544,6 +546,7 @@ main() {
     update_code
     ensure_backend_env
     install_node_dependencies_and_build
+    write_apache_vhost
     configure_pm2
     run_health_checks
 
