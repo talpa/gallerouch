@@ -72,7 +72,7 @@ const AdminPaymentsManager: React.FC = () => {
     setError(null);
     
     try {
-      const response = await axios.get('http://localhost:4777/api/payments', {
+      const response = await axios.get('/api/payments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPayments(response.data);
@@ -105,7 +105,7 @@ const AdminPaymentsManager: React.FC = () => {
 
     try {
       await axios.put(
-        `http://localhost:4777/api/payments/${selectedPayment.id}/confirm`,
+        `/api/payments/${selectedPayment.id}/confirm`,
         confirmForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -139,7 +139,7 @@ const AdminPaymentsManager: React.FC = () => {
 
     try {
       await axios.put(
-        `http://localhost:4777/api/payments/${selectedPayment.id}/invoice`,
+        `/api/payments/${selectedPayment.id}/invoice`,
         { invoiceNumber },
         { headers: { Authorization: `Bearer ${token}` } }
       );

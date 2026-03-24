@@ -71,7 +71,7 @@ const ArtworkHistoryTable: React.FC<ArtworkHistoryTableProps> = ({
   const loadUsernames = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:4777/api/auth/users/list', {
+      const res = await axios.get('/api/auth/users/list', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const map: Record<number, string> = {};

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:4777/api/artworks';
+const API_BASE = '/api/artworks';
 
 export interface ArtworkImage {
   id: number;

@@ -17,7 +17,8 @@ const { Client } = pkg;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-dotenv.config();
+// Always prefer backend/.env over inherited PM2 environment variables.
+dotenv.config({ path: path.join(__dirname, '../.env'), override: true });
 
 // Run migrations on startup
 import { runMigrations } from './migrate.js';

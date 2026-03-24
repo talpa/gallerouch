@@ -59,7 +59,7 @@ const UserPaymentsManager: React.FC = () => {
     setError(null);
     
     try {
-      const response = await axios.get('http://localhost:4777/api/payments', {
+      const response = await axios.get('/api/payments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Already filtered by backend to user's payments (as buyer or seller)

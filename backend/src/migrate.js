@@ -8,8 +8,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function runMigrations() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not set. Check backend/.env and PM2 environment.');
+  }
+
+  // Common production pitfall: unescaped special chars in password (e.g. ?, #, @, :).
+  if (/:\/\/[^/]*\?[^@]*@/.test(databaseUrl)) {
+    throw new Error('DATABASE_URL appears invalid: password likely contains an unescaped "?". URL-encode DB username/password (encodeURIComponent).');
+  }
+
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
   });
 
   try {

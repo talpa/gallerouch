@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:4777/api/auth';
+const API_BASE = '/api/auth';
 
 export interface Setting {
   key: string;

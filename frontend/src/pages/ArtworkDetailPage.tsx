@@ -93,7 +93,7 @@ const ArtworkDetailPage: React.FC = () => {
     
     try {
       // Load artwork details
-      const artworkRes = await axios.get(`http://localhost:4777/api/artworks`);
+      const artworkRes = await axios.get(`/api/artworks`);
       const artworkData = artworkRes.data.find((a: Artwork) => a.id === parseInt(id || '0'));
       
       if (!artworkData) {
@@ -114,7 +114,7 @@ const ArtworkDetailPage: React.FC = () => {
       
       // Load approved events for history
       const eventsRes = await axios.get(
-        `http://localhost:4777/api/artworks/${id}/events`
+        `/api/artworks/${id}/events`
       );
       
       // Filter only approved events
@@ -177,7 +177,7 @@ const ArtworkDetailPage: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4777/api/payments',
+        '/api/payments',
         {
           artworkId: artwork.id,
           price: latestPriceEvent.price
@@ -221,7 +221,7 @@ const ArtworkDetailPage: React.FC = () => {
     
     try {
       const response = await axios.get(
-        `http://localhost:4777/api/payments`,
+        `/api/payments`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

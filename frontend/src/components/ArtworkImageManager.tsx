@@ -56,7 +56,7 @@ const ArtworkImageManager: React.FC<ArtworkImageManagerProps> = ({ artworkId, on
       const formData = new FormData();
       formData.append('file', imageFile);
       console.log('Uploading image...');
-      const uploadRes = await fetch(`http://localhost:4777/api/upload/${artworkId}`, {
+      const uploadRes = await fetch(`/api/upload/${artworkId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData

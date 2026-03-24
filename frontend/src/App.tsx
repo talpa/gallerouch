@@ -39,7 +39,7 @@ const App: React.FC = () => {
     // Načti měnu ze settings
     const loadCurrency = async () => {
       try {
-        const response = await axios.get('http://localhost:4777/api/auth/public');
+        const response = await axios.get('/api/auth/public');
         const currencySetting = response.data;
         if (currencySetting && currencySetting.value) {
           setCurrency(currencySetting.value);

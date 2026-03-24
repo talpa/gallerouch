@@ -23,11 +23,11 @@ const LoginPage: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:4777/api/auth/google';
+    window.location.href = '/api/auth/google';
   };
 
   const handleFacebookLogin = () => {
-    window.location.href = 'http://localhost:4777/api/auth/facebook';
+    window.location.href = '/api/auth/facebook';
   };
 
   return (

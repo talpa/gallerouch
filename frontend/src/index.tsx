@@ -9,7 +9,7 @@ import './index.css';
 import './styles/theme.css';
 
 // Configure axios to use backend API endpoint
-axios.defaults.baseURL = 'http://localhost:4777';
+axios.defaults.baseURL = '';
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
