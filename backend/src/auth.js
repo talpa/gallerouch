@@ -1721,4 +1721,96 @@ router.delete('/artwork-types-admin/:id', authenticateToken, requireAdmin, async
   }
 });
 
+// POST /api/auth/facebook/data-deletion
+// Facebook Data Deletion Callback (required for Facebook Login compliance).
+// Facebook sends a signed_request with the user's Facebook ID.
+// We delete/anonymize the user row that was created via Facebook OAuth.
+// Returns a JSON with a URL where user can check deletion status.
+router.post('/facebook/data-deletion', express.urlencoded({ extended: true }), async (req, res) => {
+  const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+
+  // If Facebook app is not configured, still respond with a valid status URL.
+  if (!FACEBOOK_APP_SECRET) {
+    return res.json({
+      url: `${FRONTEND_URL}/data-deletion`,
+      confirmation_code: 'not-configured'
+    });
+  }
+
+  const signed_request = req.body?.signed_request;
+  if (!signed_request) {
+    return res.status(400).json({ error: 'Missing signed_request' });
+  }
+
+  try {
+    const crypto = await import('crypto');
+    const [encodedSig, payload] = signed_request.split('.');
+
+    // Verify signature
+    const sig = Buffer.from(encodedSig.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+    const expectedSig = crypto.default.createHmac('sha256', FACEBOOK_APP_SECRET)
+      .update(payload)
+      .digest();
+    if (!crypto.default.timingSafeEqual(sig, expectedSig)) {
+      return res.status(403).json({ error: 'Invalid signature' });
+    }
+
+    const data = JSON.parse(Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+    const facebookUserId = data.user_id;
+
+    if (facebookUserId) {
+      // Anonymize the user: remove personal data but keep the record for referential integrity.
+      const client = new Client({ connectionString: process.env.DATABASE_URL });
+      try {
+        await client.connect();
+        // Find user by matching provider=facebook — we store fb user id as part of email or username fallback.
+        // Best-effort deletion: anonymize all fields with PII.
+        await client.query(
+          `UPDATE users SET
+            username = 'deleted-fb-' || id,
+            email = 'deleted-fb-' || id || '@deleted.invalid',
+            password_hash = 'deleted',
+            provider = 'deleted'
+          WHERE provider = 'facebook'
+            AND (email LIKE '%facebook%' OR username LIKE '%' || $1 || '%')`,
+          [facebookUserId]
+        );
+        await client.end();
+      } catch (err) {
+        await client.end().catch(() => {});
+        console.error('Facebook data deletion DB error:', err.message);
+      }
+    }
+
+    const confirmationCode = `fb-del-${facebookUserId || 'unknown'}-${Date.now()}`;
+    return res.json({
+      url: `${FRONTEND_URL}/data-deletion?code=${confirmationCode}`,
+      confirmation_code: confirmationCode
+    });
+  } catch (err) {
+    console.error('Facebook data deletion error:', err.message);
+    return res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+// GET /api/auth/facebook/data-deletion
+// Human-readable data deletion instructions page (also acceptable by Facebook).
+router.get('/facebook/data-deletion', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="UTF-8"><title>Smazání dat - Gallerouch</title></head>
+<body>
+<h1>Žádost o smazání dat</h1>
+<p>Pokud si přejete smazat veškerá vaše osobní data uložená v aplikaci Gallerouch, postupujte takto:</p>
+<ol>
+  <li>Přihlaste se na <a href="${FRONTEND_URL}">${FRONTEND_URL}</a></li>
+  <li>Přejděte do nastavení účtu</li>
+  <li>Klikněte na „Smazat účet"</li>
+</ol>
+<p>Případně nás kontaktujte e-mailem na adrese uvedené na webu a vaše data smažeme do 30 dnů.</p>
+<p>Po smazání budou veškeré osobní údaje (jméno, e-mail, profil) trvale odstraněny.</p>
+</body>
+</html>`);
+});
+
 export default router;

@@ -18,6 +18,7 @@ import GalleryPage from './pages/GalleryPage';
 import ShopPage from './pages/ShopPage';
 import AccountPage from './pages/AccountPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
+import DataDeletionPage from './pages/DataDeletionPage';
 import ArtworkDetailPage from './pages/ArtworkDetailPage';
 import FilteredArtworkPage from './pages/FilteredArtworkPage';
 import FilteredByUserArtworkPage from './pages/FilteredByUserArtworkPage';
@@ -67,6 +68,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
+        <Route path="/data-deletion" element={<DataDeletionPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminGalleryManager />} />
           <Route path="gallery" element={<AdminGalleryManager />} />
