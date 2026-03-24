@@ -28,9 +28,25 @@ sudo ./scripts/ispconfig-deploy.sh update \
     --app-dir /var/www/gallerouch
 ```
 
+### Parametry skriptu
+
+Dulezite parametry:
+- `--repo-url URL` (install povinny) – Git URL repozitare
+- `--db-password PASSWORD` (install povinny) – Heslo pro PostgreSQL uzivatele `gallerouch`
+- `--domain DOMAIN` – Domenove jmeno (default: gallerouch.com)
+- `--app-dir PATH` – Aplikacni slozka (default: /var/www/gallerouch)
+- `--isp-docroot PATH` – ISPConfig web root; pokud nastaven, frontend build se zkopiruje sem
+- `--skip-system` – Preskoci instalaci systemu balicku (pouzij pri druhem deploy na stejnem serveru)
+
+**Dulezite pri update modu:**
+- Pokud neprovedl `--db-password`, skript zachova existujici DATABASE_URL v `.env` souboru.
+- Pokud je DATABASE_URL chybejici, skript selze.
+
 Poznamky:
 - Skript instaluje systemove balicky, Node.js, PM2, nastavi PostgreSQL, provede build frontendu, nastavi Apache reverse proxy a spusti backend pres PM2.
+- Migrace databaze se spusti automaticky pri startu backendu (backend/src/migrate.js); uz existujici migrace se nespusti znovu.
 - Pokud ISPConfig prepisuje Apache vhost, zkopiruj direktivy z vygenerovaneho souboru `/etc/apache2/sites-available/gallerouch.com.conf` do pole Apache Directives u daneho webu v ISPConfig.
+- Pokud chcete upgradrovat heslo DB pri dalsi aktualizaci, pouzijte `--db-password` s novym heslem a skript jej aktualizuje.
 
 ## Příprava na serveru
 

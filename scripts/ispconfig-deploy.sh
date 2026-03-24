@@ -211,7 +211,15 @@ ensure_backend_env() {
 
   upsert_env_key "$env_file" "NODE_ENV" "production"
   upsert_env_key "$env_file" "PORT" "$BACKEND_PORT"
-  upsert_env_key "$env_file" "DATABASE_URL" "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+
+  # Update DB connection only when password is explicitly provided.
+  # This prevents accidental overwrite during update mode.
+  if [[ -n "$DB_PASSWORD" ]]; then
+    upsert_env_key "$env_file" "DATABASE_URL" "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  elif ! grep -qE '^DATABASE_URL=' "$env_file"; then
+    die "DATABASE_URL is missing in $env_file. Provide --db-password or add DATABASE_URL manually."
+  fi
+
   upsert_env_key "$env_file" "GOOGLE_CALLBACK_URL" "https://${DOMAIN}/api/auth/google/callback"
   upsert_env_key "$env_file" "FACEBOOK_CALLBACK_URL" "https://${DOMAIN}/api/auth/facebook/callback"
 
