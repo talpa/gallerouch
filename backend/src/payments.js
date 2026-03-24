@@ -1,8 +1,45 @@
 import express from 'express';
 import { Client } from 'pg';
 import { authenticateToken } from './auth.js';
+import FioApi from './fio.js';
 
 const router = express.Router();
+
+/**
+ * Generate unique variable symbol for payment matching
+ * Variable symbol should be 1-10 digits for bank transfers
+ * @param {Client} client - Database client
+ * @returns {Promise<string>} Unique variable symbol
+ */
+async function generateUniqueVariableSymbol(client) {
+  // Use a counter to generate sequential variable symbols
+  const maxSymbol = 9999999999; // 10 digits max
+  
+  // Get the next available symbol starting from payment ID
+  let symbol = null;
+  let attempts = 0;
+  
+  while (!symbol && attempts < 100) {
+    const candidate = String(Math.floor(Math.random() * maxSymbol)).padStart(5, '0');
+    
+    const result = await client.query(
+      'SELECT id FROM payments WHERE variable_symbol = $1',
+      [candidate]
+    );
+    
+    if (result.rows.length === 0) {
+      symbol = candidate;
+    }
+    
+    attempts++;
+  }
+  
+  if (!symbol) {
+    throw new Error('Could not generate unique variable symbol');
+  }
+  
+  return symbol;
+}
 
 // Utility function to convert snake_case to camelCase
 function toCamel(obj) {
@@ -15,6 +52,10 @@ function toCamel(obj) {
     seller_amount: 'sellerAmount',
     payment_method: 'paymentMethod',
     transaction_id: 'transactionId',
+    variable_symbol: 'variableSymbol',
+    fio_transaction_id: 'fioTransactionId',
+    fio_matched_at: 'fioMatchedAt',
+    fio_amount_matched: 'fioAmountMatched',
     created_at: 'createdAt',
     paid_at: 'paidAt',
     confirmed_by: 'confirmedBy',
@@ -258,13 +299,16 @@ router.post('/payments', authenticateToken, async (req, res) => {
     const galleryCommission = (price * commissionPercent) / 100;
     const sellerAmount = price - galleryCommission;
     
-    // Create payment record
+    // Generate unique variable symbol for payment matching (5-10 digits)
+    const variableSymbol = await generateUniqueVariableSymbol(client);
+    
+    // Create payment record with variable symbol
     const paymentResult = await client.query(
       `INSERT INTO payments 
-       (artwork_id, buyer_id, seller_id, price, gallery_commission, seller_amount, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, 'unpaid') 
+       (artwork_id, buyer_id, seller_id, price, gallery_commission, seller_amount, status, variable_symbol) 
+       VALUES ($1, $2, $3, $4, $5, $6, 'unpaid', $7) 
        RETURNING *`,
-      [artworkId, buyerId, sellerId, price, galleryCommission, sellerAmount]
+      [artworkId, buyerId, sellerId, price, galleryCommission, sellerAmount, variableSymbol]
     );
     
     const payment = paymentResult.rows[0];
@@ -299,9 +343,10 @@ router.post('/payments', authenticateToken, async (req, res) => {
     const galleryName = galleryNameResult.rows.length > 0 ? galleryNameResult.rows[0].value : 'Gallerouch';
     const paymentDescriptionTemplate = templateResult.rows.length > 0 ? templateResult.rows[0].value : '%s zakoupen v %s';
     
-    // Return payment with all necessary QR code data
+    // Return payment with all necessary QR code data and variable symbol
     const paymentWithSettings = {
       ...toCamel(payment),
+      variableSymbol: variableSymbol,
       artworkId: artworkId,
       bankAccountNumber: bankAccountNumber,
       galleryName: galleryName,
@@ -512,6 +557,157 @@ router.put('/payments/:id/invoice', authenticateToken, async (req, res) => {
     res.json(toCamel(result.rows[0]));
   } catch (err) {
     await client.end();
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/payments/sync-fio - Sync payments with Fio Bank (admin only)
+// This endpoint checks for incoming transactions and matches them with payments
+router.post('/sync-fio', authenticateToken, async (req, res) => {
+  const isAdmin = req.user.role === 'admin';
+  
+  if (!isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  
+  try {
+    await client.connect();
+    
+    // Check if Fio API is configured
+    const fioToken = process.env.FIO_API_TOKEN;
+    if (!fioToken) {
+      await client.end();
+      return res.status(400).json({ error: 'FIO_API_TOKEN not configured in .env' });
+    }
+    
+    // Initialize Fio API
+    const fio = new FioApi(fioToken);
+    
+    // Get transactions from last 7 days
+    const sinceDate = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
+    const transactions = await fio.getRecentTransactions(sinceDate);
+    
+    // Filter incoming payments only
+    const incomingTransactions = fio.filterIncomingPayments(transactions);
+    
+    // Filter transactions with variable symbol
+    const transactionsWithSymbol = fio.filterTransactionsWithSymbol(
+      incomingTransactions.map(tx => fio.parseTransaction(tx))
+    );
+    
+    // Match transactions with payments and update them
+    const matched = [];
+    const unmatched = [];
+    
+    for (const tx of transactionsWithSymbol) {
+      // Find payment by variable symbol
+      const paymentResult = await client.query(
+        `SELECT * FROM payments 
+         WHERE variable_symbol = $1 AND status = 'unpaid'
+         LIMIT 1`,
+        [tx.variableSymbol]
+      );
+      
+      if (paymentResult.rows.length > 0) {
+        const payment = paymentResult.rows[0];
+        
+        // Check if amount matches (with small tolerance for fees)
+        const amountDiff = Math.abs(parseFloat(payment.price) - tx.amount);
+        const tolerance = 1; // Allow 1 CZK difference for bank fees
+        
+        if (amountDiff <= tolerance) {
+          // Update payment as paid
+          const updateResult = await client.query(
+            `UPDATE payments 
+             SET status = 'paid', 
+                 paid_at = NOW(),
+                 payment_method = 'bank_transfer',
+                 fio_transaction_id = $1,
+                 fio_matched_at = NOW(),
+                 fio_amount_matched = $2,
+                 confirmed_by = $3,
+                 confirmed_at = NOW(),
+                 transaction_id = $1
+             WHERE id = $4
+             RETURNING *`,
+            [tx.transactionId, tx.amount, 1, payment.id] // user_id = 1 (system/admin)
+          );
+          
+          if (updateResult.rows.length > 0) {
+            // Transfer artwork ownership to buyer
+            await client.query(
+              'UPDATE artworks SET user_id = $1 WHERE id = $2',
+              [payment.buyer_id, payment.artwork_id]
+            );
+            
+            // Create ownership_change event
+            const artworkResult = await client.query(
+              'SELECT title FROM artworks WHERE id = $1',
+              [payment.artwork_id]
+            );
+            
+            if (artworkResult.rows.length > 0) {
+              const eventDetails = JSON.stringify({
+                title: artworkResult.rows[0].title,
+                status: 'Vystaveno',
+                previousOwnerId: payment.seller_id,
+                newOwnerId: payment.buyer_id,
+                reason: 'Payment confirmed via Fio Bank'
+              });
+
+              await client.query(
+                `INSERT INTO events 
+                 (artwork_id, type, status, details, created_by, owner_id, price, approved_at, approved_by) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8)`,
+                [payment.artwork_id, 'ownership_change', 'approved', eventDetails, 1, payment.buyer_id, payment.price, 1]
+              );
+            }
+            
+            matched.push({
+              paymentId: payment.id,
+              variableSymbol: tx.variableSymbol,
+              amount: tx.amount,
+              senderName: tx.senderName,
+              date: tx.date
+            });
+          }
+        } else {
+          // Amount mismatch
+          unmatched.push({
+            variableSymbol: tx.variableSymbol,
+            amount: tx.amount,
+            expectedAmount: payment.price,
+            reason: 'Amount mismatch',
+            senderName: tx.senderName,
+            date: tx.date
+          });
+        }
+      } else {
+        // No matching payment found
+        unmatched.push({
+          variableSymbol: tx.variableSymbol,
+          amount: tx.amount,
+          reason: 'No matching payment or already paid',
+          senderName: tx.senderName,
+          date: tx.date
+        });
+      }
+    }
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      message: `Synced ${matched.length} payments, ${unmatched.length} unmatched`,
+      matched: matched,
+      unmatched: unmatched,
+      totalProcessed: incomingTransactions.length
+    });
+  } catch (err) {
+    await client.end();
+    console.error('Fio sync error:', err);
     res.status(500).json({ error: err.message });
   }
 });

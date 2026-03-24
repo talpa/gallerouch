@@ -42,6 +42,9 @@ interface Payment {
   artworkTitle: string;
   createdAt: string;
   confirmedAt?: string;
+  variableSymbol?: string;
+  fioTransactionId?: string;
+  fioMatchedAt?: string;
 }
 
 interface Artwork {
@@ -457,7 +460,7 @@ const ArtworkDetailPage: React.FC = () => {
                         bankAccount={payment!.bankAccountNumber}
                         galleryName={payment!.galleryName}
                         price={payment!.price}
-                        variableSymbol={payment!.artworkId.toString()}
+                        variableSymbol={payment!.variableSymbol || payment!.id.toString()}
                         description={payment!.paymentDescriptionTemplate
                           ?.replace('%s', artwork.title)
                           .replace('%s', payment!.galleryName) || artwork.title}

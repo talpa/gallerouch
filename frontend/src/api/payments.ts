@@ -17,6 +17,10 @@ export interface Payment {
   invoiceSentAt?: string;
   confirmedBy?: number;
   confirmedAt?: string;
+  variableSymbol?: string;
+  fioTransactionId?: string;
+  fioMatchedAt?: string;
+  fioAmountMatched?: number;
   artworkTitle?: string;
   buyerEmail?: string;
   buyerName?: string;

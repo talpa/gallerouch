@@ -25,6 +25,9 @@ interface Payment {
   confirmedAt?: string;
   invoiceSentAt?: string;
   invoiceNumber?: string;
+  variableSymbol?: string;
+  fioTransactionId?: string;
+  fioMatchedAt?: string;
   artworkTitle?: string;
   buyerEmail?: string;
   buyerName?: string;
@@ -189,6 +192,7 @@ const UserPaymentsManager: React.FC = () => {
           <thead>
             <tr>
               <th>{t('payments.artwork') || 'Dílo'}</th>
+              <th>{t('payments.varSymbol') || 'Var. symbol'}</th>
               <th>{t('payments.role') || 'Role'}</th>
               <th>{t('payments.price') || 'Cena'}</th>
               <th>{t('payments.status') || 'Stav'}</th>
@@ -214,6 +218,14 @@ const UserPaymentsManager: React.FC = () => {
                       <br />
                       <small className="text-muted">ID: {payment.artworkId}</small>
                     </button>
+                  </td>
+                  <td>
+                    <code>{payment.variableSymbol || '-'}</code>
+                    {payment.fioTransactionId && (
+                      <div>
+                        <small className="text-success">✓ Spárování</small>
+                      </div>
+                    )}
                   </td>
                   <td>
                     {isBuyer ? (

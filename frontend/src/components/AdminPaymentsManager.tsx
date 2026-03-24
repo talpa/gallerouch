@@ -25,6 +25,9 @@ interface Payment {
   confirmedAt?: string;
   invoiceSentAt?: string;
   invoiceNumber?: string;
+  variableSymbol?: string;
+  fioTransactionId?: string;
+  fioMatchedAt?: string;
   artworkTitle?: string;
   buyerEmail?: string;
   buyerName?: string;
@@ -367,6 +370,7 @@ const AdminPaymentsManager: React.FC = () => {
                 <thead>
                   <tr>
                     <th>{t('payments.id') || 'ID'}</th>
+                    <th>{t('payments.varSymbol') || 'Var. symbol'}</th>
                     <th>{t('payments.artwork') || 'Dílo'}</th>
                     <th>{t('payments.buyer') || 'Kupující'}</th>
                     <th>{t('payments.price') || 'Cena'}</th>
@@ -381,6 +385,15 @@ const AdminPaymentsManager: React.FC = () => {
                   {seller.payments.map((payment) => (
                     <tr key={payment.id}>
                       <td>{payment.id}</td>
+                      <td>
+                        <code>{payment.variableSymbol || '-'}</code>
+                        {payment.fioTransactionId && (
+                          <>
+                            <br />
+                            <small className="text-success">✓ {payment.fioTransactionId.substring(0, 8)}...</small>
+                          </>
+                        )}
+                      </td>
                       <td>
                         <strong>{payment.artworkTitle}</strong>
                         <br />
@@ -458,6 +471,7 @@ const AdminPaymentsManager: React.FC = () => {
           <thead>
             <tr>
               <th>{t('payments.id') || 'ID'}</th>
+              <th>{t('payments.varSymbol') || 'Var. symbol'}</th>
               <th>{t('payments.artwork') || 'Dílo'}</th>
               <th>{t('payments.buyer') || 'Kupující'}</th>
               <th>{t('payments.seller') || 'Prodávající'}</th>
@@ -473,6 +487,15 @@ const AdminPaymentsManager: React.FC = () => {
             {filteredPayments.map((payment) => (
               <tr key={payment.id}>
                 <td>{payment.id}</td>
+                <td>
+                  <code>{payment.variableSymbol || '-'}</code>
+                  {payment.fioTransactionId && (
+                    <>
+                      <br />
+                      <small className="text-success">✓ {payment.fioTransactionId.substring(0, 8)}...</small>
+                    </>
+                  )}
+                </td>
                 <td>
                   <strong>{payment.artworkTitle}</strong>
                   <br />
