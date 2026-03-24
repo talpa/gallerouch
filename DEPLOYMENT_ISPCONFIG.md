@@ -16,31 +16,61 @@ sudo ./scripts/ispconfig-deploy.sh install \
     --repo-url https://github.com/talpa/gallerouch.git \
     --domain gallerouch.com \
     --db-password 'SILNE_HESLO' \
+    --github-token 'ghp_xxxxxxxxxxxx' \
     --isp-docroot /var/www/clients/client1/web1/web
 ```
+
+**GitHub Personal Access Token** (pro private repozitáře):
+1. Jděte na https://github.com/settings/tokens/new
+2. Vygenerujte nový token s rozsahem `repo` (plný přístup k repozitářům)
+3. Zkopírujte token a předejte ho skriptu přes `--github-token`
+4. Token se bezpečně uloží na serveru do `~/.git-credentials` s právy `600`
 
 Aktualizace:
 
 ```bash
 cd /path/to/gallerouch
-sudo ./scripts/ispconfig-deploy.sh update \
-    --domain gallerouch.com \
-    --app-dir /var/www/gallerouch
+sudo ./scripts/ispconfig-deploy.sh update
 ```
+
+Po prvním úspěšném `install` si skript uloží všechny parametry do `.deploy-config` souboru, takže při `update` modu je stačí právě jen spustit bez argumentů. Pokud chcete přepsat některou hodnotu:
+
+```bash
+sudo ./scripts/ispconfig-deploy.sh update \
+    --isp-docroot /path/to/new/web   # Přepíše uloženou cestu
+```
+
+### Uložení konfiguraci
+
+Po úspěšném `install` modu se všechny důležité parametry uloží do souboru:
+```
+$APP_DIR/.deploy-config
+```
+
+Při `update` modu se tento soubor automaticky načte. Parametry zadané v příkazové řádce přepisují uložené hodnoty. Konfigurační soubor je chráněn (`chmod 600`).
 
 ### Parametry skriptu
 
 Dulezite parametry:
 - `--repo-url URL` (install povinny) – Git URL repozitare
 - `--db-password PASSWORD` (install povinny) – Heslo pro PostgreSQL uzivatele `gallerouch`
+- `--github-token TOKEN` (optional) – GitHub Personal Access Token pro private repozitare
 - `--domain DOMAIN` – Domenove jmeno (default: gallerouch.com)
 - `--app-dir PATH` – Aplikacni slozka (default: /var/www/gallerouch)
 - `--isp-docroot PATH` – ISPConfig web root; pokud nastaven, frontend build se zkopiruje sem
 - `--skip-system` – Preskoci instalaci systemu balicku (pouzij pri druhem deploy na stejnem serveru)
 
+**GitHub Token vytváreni a bezpecnost:**
+- Token se generuje na GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+- Vytvořte nový token s rozsahem `repo` (full control of private repositories)
+- **Nikdy** neukládejte token do verzovacího systému (git)
+- Skript bezpečně uloží token do `~/.git-credentials` s právy `600` (čitelný jen pro vlastníka)
+- Při update modu se token načte ze uložené konfigurace, takže jej nemusíte znovu zadávat
+
 **Dulezite pri update modu:**
 - Pokud neprovedl `--db-password`, skript zachova existujici DATABASE_URL v `.env` souboru.
 - Pokud je DATABASE_URL chybejici, skript selze.
+- GitHub token se automaticky načte z `.git-credentials` souboru
 
 Poznamky:
 - Skript instaluje systemove balicky, Node.js, PM2, nastavi PostgreSQL, provede build frontendu, nastavi Apache reverse proxy a spusti backend pres PM2.

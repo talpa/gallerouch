@@ -22,6 +22,7 @@ DB_PORT="5432"
 APACHE_SITE_CONF=""
 ISP_DOCROOT=""
 SKIP_SYSTEM="0"
+GITHUB_TOKEN=""
 
 usage() {
   cat <<EOF
@@ -32,6 +33,9 @@ Usage:
 Required for install:
   --repo-url URL            Git repository URL
   --db-password PASSWORD    PostgreSQL password for --db-user
+
+Optional (for GitHub private repos):
+  --github-token TOKEN      GitHub Personal Access Token (for https cloning)
 
 Options:
   --domain DOMAIN           Domain name (default: gallerouch.com)
@@ -57,11 +61,10 @@ Examples:
     --repo-url https://github.com/your-org/gallerouch.git \
     --domain gallerouch.com \
     --db-password 'StrongPassword123' \
+    --github-token 'ghp_xxxxxxxxxxxx' \
     --isp-docroot /var/www/clients/client1/web1/web
 
-  sudo ./scripts/ispconfig-deploy.sh update \
-    --domain gallerouch.com \
-    --app-dir /var/www/gallerouch
+  sudo ./scripts/ispconfig-deploy.sh update
 EOF
 }
 
@@ -78,10 +81,64 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
 }
 
+load_config() {
+  local config_file="$APP_DIR/.deploy-config"
+  if [[ -f "$config_file" ]]; then
+    log "Loading saved configuration from $config_file"
+    # Source the config file to load saved variables
+    # Use subshell to prevent exiting on errors
+    (
+      set -a
+      . "$config_file"
+      set +a
+    ) || true
+    # Export the loaded variables
+    DOMAIN="$(grep '^DOMAIN=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    BRANCH="$(grep '^BRANCH=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    RUN_USER="$(grep '^RUN_USER=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    RUN_GROUP="$(grep '^RUN_GROUP=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    BACKEND_PORT="$(grep '^BACKEND_PORT=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    PM2_NAME="$(grep '^PM2_NAME=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    NODE_MAJOR="$(grep '^NODE_MAJOR=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    DB_NAME="$(grep '^DB_NAME=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    DB_USER="$(grep '^DB_USER=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    DB_HOST="$(grep '^DB_HOST=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    DB_PORT="$(grep '^DB_PORT=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+    ISP_DOCROOT="$(grep '^ISP_DOCROOT=' "$config_file" 2>/dev/null | cut -d= -f2- | tr -d "'")"
+  fi
+}
+
+save_config() {
+  local config_file="$APP_DIR/.deploy-config"
+  log "Saving configuration to $config_file"
+  cat > "$config_file" <<CONF
+# Deployment configuration saved on $(date)
+DOMAIN='$DOMAIN'
+BRANCH='$BRANCH'
+RUN_USER='$RUN_USER'
+RUN_GROUP='$RUN_GROUP'
+BACKEND_PORT='$BACKEND_PORT'
+PM2_NAME='$PM2_NAME'
+NODE_MAJOR='$NODE_MAJOR'
+DB_NAME='$DB_NAME'
+DB_USER='$DB_USER'
+DB_HOST='$DB_HOST'
+DB_PORT='$DB_PORT'
+ISP_DOCROOT='$ISP_DOCROOT'
+CONF
+  chmod 600 "$config_file"
+  log "Configuration saved successfully"
+}
+
 parse_args() {
   [[ $# -ge 1 ]] || { usage; exit 1; }
   MODE="$1"
   shift
+
+  # For update mode, try to load saved config first
+  if [[ "$MODE" == "update" ]] && [[ -d "$APP_DIR" ]]; then
+    load_config
+  fi
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -102,6 +159,7 @@ parse_args() {
       --apache-site-conf) APACHE_SITE_CONF="$2"; shift 2 ;;
       --isp-docroot) ISP_DOCROOT="$2"; shift 2 ;;
       --skip-system) SKIP_SYSTEM="1"; shift ;;
+      --github-token) GITHUB_TOKEN="$2"; shift 2 ;;
       -h|--help) usage; exit 0 ;;
       *) die "Unknown argument: $1" ;;
     esac
@@ -149,9 +207,30 @@ prepare_app_dir() {
   mkdir -p "$APP_DIR"
   chown -R "$RUN_USER:$RUN_GROUP" "$APP_DIR"
 
+  # Configure git credentials if token provided
+  if [[ -n "$GITHUB_TOKEN" ]]; then
+    log "Configuring git credentials for GitHub token authentication"
+    local git_creds_file="$HOME/.git-credentials"
+    
+    # Extract GitHub hostname from repo URL
+    local github_host="github.com"
+    if [[ "$REPO_URL" =~ https://([^/]+)/ ]]; then
+      github_host="${BASH_REMATCH[1]}"
+    fi
+    
+    # Store credentials in git-credentials file
+    cat >> "$git_creds_file" <<CREDS
+https://$GITHUB_TOKEN@$github_host
+CREDS
+    chmod 600 "$git_creds_file"
+    
+    # Configure git to use credentials helper
+    git config --global credential.helper store
+  fi
+
   if [[ ! -d "$APP_DIR/.git" ]]; then
     log "Cloning repository"
-    sudo -u "$RUN_USER" git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+    sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git clone --branch '$BRANCH' '$REPO_URL' ."
   else
     log "Repository already exists, fetching latest branch"
     sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
@@ -365,6 +444,7 @@ main() {
     write_apache_vhost
     configure_pm2
     run_health_checks
+    save_config
 
     log "Install completed"
     echo "Next steps:"

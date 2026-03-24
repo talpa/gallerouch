@@ -9,5 +9,5 @@ dist/
 coverage/
 frontend/node_modules/
 backend/node_modules/
-
+token_new.txt
 .fake
