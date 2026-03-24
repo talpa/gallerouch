@@ -340,11 +340,31 @@ install_node_dependencies_and_build() {
     chown -R "$RUN_USER:$RUN_GROUP" "/var/www/.npm" || true
   fi
 
+  npm_install_resilient() {
+    local workdir="$1"
+    local npm_args="$2"
+    local log_file
+    log_file="$npm_cache/npm-install-$(basename "$workdir").log"
+
+    if sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$workdir' && npm ci $npm_args 2>&1 | tee '$log_file'"; then
+      return 0
+    fi
+
+    # npm ci can fail when package-lock is out of sync with package.json.
+    if grep -q "npm error code EUSAGE" "$log_file" 2>/dev/null; then
+      log "npm ci failed due to lockfile mismatch in $workdir, falling back to npm install"
+    else
+      log "npm ci failed in $workdir, trying npm install fallback"
+    fi
+
+    sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$workdir' && npm install $npm_args 2>&1 | tee '$log_file'"
+  }
+
   log "Installing backend dependencies"
-  sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/backend' && npm ci --omit=dev"
+  npm_install_resilient "$APP_DIR/backend" "--omit=dev --no-audit --no-fund"
 
   log "Installing frontend dependencies"
-  sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/frontend' && npm ci"
+  npm_install_resilient "$APP_DIR/frontend" "--no-audit --no-fund"
 
   log "Building frontend"
   sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$APP_DIR/frontend' && npm run build"
@@ -418,6 +438,14 @@ APACHE
 
 configure_pm2() {
   local ecosystem_file="$APP_DIR/backend/ecosystem.config.cjs"
+  local run_home
+  local pm2_home
+  run_home="$(get_run_user_home)"
+  pm2_home="$APP_DIR/.pm2"
+
+  mkdir -p "$pm2_home"
+  chown -R "$RUN_USER:$RUN_GROUP" "$pm2_home"
+
   log "Creating PM2 ecosystem config"
 
   cat > "$ecosystem_file" <<PM2
@@ -439,24 +467,27 @@ PM2
   chown "$RUN_USER:$RUN_GROUP" "$ecosystem_file"
 
   log "Starting/reloading PM2 process"
-  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/backend' && pm2 startOrReload ecosystem.config.cjs --update-env"
-  sudo -u "$RUN_USER" pm2 save
+  sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" bash -c "cd '$APP_DIR/backend' && pm2 startOrReload ecosystem.config.cjs --update-env"
+  sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" pm2 save
 
-  local run_home
-  run_home="$(eval echo "~${RUN_USER}")"
   if [[ -d "$run_home" ]]; then
-    pm2 startup systemd -u "$RUN_USER" --hp "$run_home" >/dev/null || true
+    env PM2_HOME="$pm2_home" pm2 startup systemd -u "$RUN_USER" --hp "$run_home" >/dev/null || true
   fi
 }
 
 run_health_checks() {
   log "Running health checks"
+  local run_home
+  local pm2_home
+  run_home="$(get_run_user_home)"
+  pm2_home="$APP_DIR/.pm2"
+
   if command -v curl >/dev/null 2>&1; then
     curl -fsS "http://127.0.0.1:${BACKEND_PORT}/" >/dev/null
     echo "Backend responded on port ${BACKEND_PORT}."
   fi
 
-  sudo -u "$RUN_USER" pm2 status "$PM2_NAME" || true
+  sudo -u "$RUN_USER" env HOME="$run_home" PM2_HOME="$pm2_home" pm2 status "$PM2_NAME" || true
 }
 
 main() {

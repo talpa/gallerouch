@@ -89,6 +89,29 @@ sudo chown -R www-data:www-data /var/www/.npm
 
 Aktualni verze skriptu uz pouziva vlastni cache v `$APP_DIR/.npm-cache`, takze se chyba pri dalsich deployich nema opakovat.
 
+### Troubleshooting npm EUSAGE (lockfile mismatch)
+
+Pokud narazite na chybu `npm ci can only install packages when your package.json and package-lock.json are in sync`,
+skript automaticky zkusí fallback na `npm install` a deploy pokračuje.
+
+Doporuceni:
+- V repozitari držte `package-lock.json` commitnuty spolu se změnami v `package.json`.
+
+### Troubleshooting PM2 EACCES
+
+Pokud narazite na chybu typu `EACCES: permission denied, mkdir '/var/www/.pm2/...'`,
+aktualni skript uz PM2 nasmeruje do aplikační slozky:
+- `$APP_DIR/.pm2`
+
+Jednorazovy fix pro existujici server:
+
+```bash
+sudo mkdir -p /var/www/gallerouch/.pm2
+sudo chown -R www-data:www-data /var/www/gallerouch/.pm2
+```
+
+Pak spustte deploy znovu.
+
 ## Příprava na serveru
 
 ### 1. Instalace Node.js a npm
