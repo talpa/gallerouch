@@ -333,6 +333,9 @@ install_node_dependencies_and_build() {
   run_home="$(get_run_user_home)"
   npm_cache="$APP_DIR/.npm-cache"
 
+  # Ensure runtime user can write into app workdirs after sudo/git operations.
+  chown -R "$RUN_USER:$RUN_GROUP" "$APP_DIR/backend" "$APP_DIR/frontend" "$APP_DIR/.npm-cache" 2>/dev/null || true
+
   mkdir -p "$npm_cache"
   chown -R "$RUN_USER:$RUN_GROUP" "$npm_cache"
 
@@ -358,7 +361,8 @@ install_node_dependencies_and_build() {
       log "npm ci failed in $workdir, trying npm install fallback"
     fi
 
-    sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "set -o pipefail; cd '$workdir' && npm install $npm_args 2>&1 | tee '$log_file'"
+    # Fallback uses --no-package-lock to avoid write failures when lockfile is root-owned.
+    sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "set -o pipefail; cd '$workdir' && npm install --no-package-lock $npm_args 2>&1 | tee '$log_file'"
   }
 
   log "Installing backend dependencies"
