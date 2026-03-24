@@ -96,6 +96,8 @@ skript automaticky zkusí fallback na `npm install` a deploy pokračuje.
 
 Doporuceni:
 - V repozitari držte `package-lock.json` commitnuty spolu se změnami v `package.json`.
+- Pokud backend dependencies chybi (napr. `Cannot find package 'express'`), zkontrolujte log:
+    - `$APP_DIR/.npm-cache/npm-install-backend.log`
 
 ### Troubleshooting PM2 EACCES
 

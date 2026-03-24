@@ -346,7 +346,7 @@ install_node_dependencies_and_build() {
     local log_file
     log_file="$npm_cache/npm-install-$(basename "$workdir").log"
 
-    if sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$workdir' && npm ci $npm_args 2>&1 | tee '$log_file'"; then
+    if sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "set -o pipefail; cd '$workdir' && npm ci $npm_args 2>&1 | tee '$log_file'"; then
       return 0
     fi
 
@@ -357,11 +357,16 @@ install_node_dependencies_and_build() {
       log "npm ci failed in $workdir, trying npm install fallback"
     fi
 
-    sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "cd '$workdir' && npm install $npm_args 2>&1 | tee '$log_file'"
+    sudo -u "$RUN_USER" env HOME="$run_home" NPM_CONFIG_CACHE="$npm_cache" bash -c "set -o pipefail; cd '$workdir' && npm install $npm_args 2>&1 | tee '$log_file'"
   }
 
   log "Installing backend dependencies"
   npm_install_resilient "$APP_DIR/backend" "--omit=dev --no-audit --no-fund"
+
+  # Fail early with a clear message if critical runtime deps are still missing.
+  if [[ ! -f "$APP_DIR/backend/node_modules/express/package.json" ]]; then
+    die "Backend dependencies are incomplete: express was not installed in $APP_DIR/backend/node_modules. Check $npm_cache/npm-install-backend.log"
+  fi
 
   log "Installing frontend dependencies"
   npm_install_resilient "$APP_DIR/frontend" "--no-audit --no-fund"
