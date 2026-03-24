@@ -1,0 +1,46 @@
+/* My Events grid & table styling */
+
+.user-events {
+  margin-top: 0.5rem;
+}
+
+.user-events.grid-gap-md .row {
+  --bs-gutter-x: var(--ui-gap);
+  --bs-gutter-y: var(--ui-gap);
+}
+
+.user-events-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.user-events-table thead th {
+  font-weight: 600;
+}
+
+.user-events-table th,
+.user-events-table td {
+  padding: 0.65rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* Column sizing for better readability */
+.user-events-table .col-id { width: 70px; }
+.user-events-table .col-type { width: 160px; }
+.user-events-table .col-created { width: 180px; }
+.user-events-table .col-status { width: 140px; }
+.user-events-table .col-approved { width: 180px; }
+.user-events-table .col-price { width: 120px; text-align: right; }
+
+/* Owner cell formatting */
+.user-events-table .owner-cell strong {
+  display: block;
+}
+.user-events-table .owner-cell small {
+  color: #6c757d;
+}
+
+/* Empty state row */
+.user-events-table .empty-row td {
+  padding: 1rem;
+}

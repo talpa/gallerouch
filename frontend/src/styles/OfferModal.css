@@ -1,0 +1,36 @@
+.offer-modal {
+  .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    .btn-close {
+      filter: invert(1);
+    }
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+
+    &:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+    }
+  }
+}
+
+.offer-form {
+  .price-input {
+    font-size: 1.1rem;
+    padding: 0.75rem;
+  }
+
+  .message-textarea {
+    resize: vertical;
+    font-size: 0.95rem;
+  }
+}

@@ -1,0 +1,47 @@
+/* Global styles */
+
+/* Modal close button styling - override Bootstrap defaults */
+.btn-close {
+  background-color: #52c41a !important;
+  border: 2px solid #389e0d !important;
+  border-radius: 6px !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  opacity: 1 !important;
+  transition: all 0.2s ease !important;
+  filter: brightness(1.05) !important;
+  box-shadow: 0 2px 6px rgba(82, 196, 26, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  padding: 0 !important;
+}
+
+.btn-close:hover,
+.btn-close:focus,
+.btn-close:active {
+  background-color: #389e0d !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.5) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Close button icon color */
+.btn-close::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%23ffffff' d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  background-position: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 1 !important;
+}
+
+.btn-close:hover::after,
+.btn-close:focus::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%23ffffff' d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  background-position: center !important;
+}

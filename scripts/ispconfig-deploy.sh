@@ -1,0 +1,377 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Gallerouch deploy script for ISPConfig/Apache hosts.
+# Supports first-time installation and safe updates.
+
+MODE=""
+DOMAIN="gallerouch.com"
+APP_DIR="/var/www/gallerouch"
+REPO_URL=""
+BRANCH="main"
+RUN_USER="www-data"
+RUN_GROUP="www-data"
+BACKEND_PORT="4777"
+PM2_NAME="gallerouch"
+NODE_MAJOR="20"
+DB_NAME="gallerouch"
+DB_USER="gallerouch"
+DB_PASSWORD=""
+DB_HOST="127.0.0.1"
+DB_PORT="5432"
+APACHE_SITE_CONF=""
+ISP_DOCROOT=""
+SKIP_SYSTEM="0"
+
+usage() {
+  cat <<EOF
+Usage:
+  sudo ./scripts/ispconfig-deploy.sh install [options]
+  sudo ./scripts/ispconfig-deploy.sh update [options]
+
+Required for install:
+  --repo-url URL            Git repository URL
+  --db-password PASSWORD    PostgreSQL password for --db-user
+
+Options:
+  --domain DOMAIN           Domain name (default: gallerouch.com)
+  --app-dir PATH            App directory on server (default: /var/www/gallerouch)
+  --branch NAME             Git branch (default: main)
+  --run-user USER           Runtime user for app/pm2 (default: www-data)
+  --run-group GROUP         Runtime group (default: www-data)
+  --backend-port PORT       Backend port (default: 4777)
+  --pm2-name NAME           PM2 process name (default: gallerouch)
+  --node-major VERSION      Node major version (default: 20)
+  --db-name NAME            PostgreSQL DB name (default: gallerouch)
+  --db-user USER            PostgreSQL DB user (default: gallerouch)
+  --db-password PASSWORD    PostgreSQL DB user password
+  --db-host HOST            PostgreSQL host (default: 127.0.0.1)
+  --db-port PORT            PostgreSQL port (default: 5432)
+  --apache-site-conf PATH   Apache vhost file path (default: /etc/apache2/sites-available/<domain>.conf)
+  --isp-docroot PATH        Existing ISPConfig web root; if set, frontend build is deployed there
+  --skip-system             Skip apt/node/pm2 package setup
+  -h, --help                Show this help
+
+Examples:
+  sudo ./scripts/ispconfig-deploy.sh install \
+    --repo-url https://github.com/your-org/gallerouch.git \
+    --domain gallerouch.com \
+    --db-password 'StrongPassword123' \
+    --isp-docroot /var/www/clients/client1/web1/web
+
+  sudo ./scripts/ispconfig-deploy.sh update \
+    --domain gallerouch.com \
+    --app-dir /var/www/gallerouch
+EOF
+}
+
+log() {
+  printf "\n[%s] %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$1"
+}
+
+die() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+parse_args() {
+  [[ $# -ge 1 ]] || { usage; exit 1; }
+  MODE="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --domain) DOMAIN="$2"; shift 2 ;;
+      --app-dir) APP_DIR="$2"; shift 2 ;;
+      --repo-url) REPO_URL="$2"; shift 2 ;;
+      --branch) BRANCH="$2"; shift 2 ;;
+      --run-user) RUN_USER="$2"; shift 2 ;;
+      --run-group) RUN_GROUP="$2"; shift 2 ;;
+      --backend-port) BACKEND_PORT="$2"; shift 2 ;;
+      --pm2-name) PM2_NAME="$2"; shift 2 ;;
+      --node-major) NODE_MAJOR="$2"; shift 2 ;;
+      --db-name) DB_NAME="$2"; shift 2 ;;
+      --db-user) DB_USER="$2"; shift 2 ;;
+      --db-password) DB_PASSWORD="$2"; shift 2 ;;
+      --db-host) DB_HOST="$2"; shift 2 ;;
+      --db-port) DB_PORT="$2"; shift 2 ;;
+      --apache-site-conf) APACHE_SITE_CONF="$2"; shift 2 ;;
+      --isp-docroot) ISP_DOCROOT="$2"; shift 2 ;;
+      --skip-system) SKIP_SYSTEM="1"; shift ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "Unknown argument: $1" ;;
+    esac
+  done
+
+  [[ "$MODE" == "install" || "$MODE" == "update" ]] || die "Mode must be 'install' or 'update'"
+
+  if [[ -z "$APACHE_SITE_CONF" ]]; then
+    APACHE_SITE_CONF="/etc/apache2/sites-available/${DOMAIN}.conf"
+  fi
+
+  if [[ "$MODE" == "install" ]]; then
+    [[ -n "$REPO_URL" ]] || die "--repo-url is required for install"
+    [[ -n "$DB_PASSWORD" ]] || die "--db-password is required for install"
+  fi
+}
+
+install_system_packages() {
+  [[ "$SKIP_SYSTEM" == "1" ]] && return 0
+
+  log "Installing system dependencies"
+  need_cmd apt-get
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update
+  apt-get install -y ca-certificates curl gnupg lsb-release git rsync apache2 postgresql postgresql-contrib
+
+  if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | sed 's/^v//' | cut -d. -f1)" != "$NODE_MAJOR" ]]; then
+    log "Installing Node.js ${NODE_MAJOR}.x"
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash -
+    apt-get install -y nodejs
+  fi
+
+  if ! command -v pm2 >/dev/null 2>&1; then
+    log "Installing PM2"
+    npm install -g pm2
+  fi
+
+  a2enmod proxy proxy_http rewrite headers >/dev/null
+  systemctl enable apache2 postgresql >/dev/null
+  systemctl restart postgresql
+}
+
+prepare_app_dir() {
+  log "Preparing application directory"
+  mkdir -p "$APP_DIR"
+  chown -R "$RUN_USER:$RUN_GROUP" "$APP_DIR"
+
+  if [[ ! -d "$APP_DIR/.git" ]]; then
+    log "Cloning repository"
+    sudo -u "$RUN_USER" git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+  else
+    log "Repository already exists, fetching latest branch"
+    sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
+  fi
+}
+
+update_code() {
+  log "Updating source code"
+  [[ -d "$APP_DIR/.git" ]] || die "App directory does not contain a git repository: $APP_DIR"
+  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR' && git fetch origin '$BRANCH' && git checkout '$BRANCH' && git pull --ff-only origin '$BRANCH'"
+}
+
+setup_database() {
+  log "Ensuring PostgreSQL user and database"
+  sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+DO
+\$\$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${DB_USER}') THEN
+    CREATE ROLE ${DB_USER} LOGIN PASSWORD '${DB_PASSWORD}';
+  ELSE
+    ALTER ROLE ${DB_USER} WITH LOGIN PASSWORD '${DB_PASSWORD}';
+  END IF;
+END
+\$\$;
+SQL
+
+  sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
+
+  sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+}
+
+upsert_env_key() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+
+  if grep -qE "^${key}=" "$file"; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "$file"
+  else
+    echo "${key}=${value}" >> "$file"
+  fi
+}
+
+ensure_backend_env() {
+  local env_file="$APP_DIR/backend/.env"
+  log "Configuring backend .env"
+
+  if [[ ! -f "$env_file" ]]; then
+    if [[ -f "$APP_DIR/backend/.env.example" ]]; then
+      cp "$APP_DIR/backend/.env.example" "$env_file"
+    else
+      touch "$env_file"
+    fi
+  fi
+
+  upsert_env_key "$env_file" "NODE_ENV" "production"
+  upsert_env_key "$env_file" "PORT" "$BACKEND_PORT"
+  upsert_env_key "$env_file" "DATABASE_URL" "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  upsert_env_key "$env_file" "GOOGLE_CALLBACK_URL" "https://${DOMAIN}/api/auth/google/callback"
+  upsert_env_key "$env_file" "FACEBOOK_CALLBACK_URL" "https://${DOMAIN}/api/auth/facebook/callback"
+
+  chmod 600 "$env_file"
+  chown "$RUN_USER:$RUN_GROUP" "$env_file"
+}
+
+install_node_dependencies_and_build() {
+  log "Installing backend dependencies"
+  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/backend' && npm ci --omit=dev"
+
+  log "Installing frontend dependencies"
+  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/frontend' && npm ci"
+
+  log "Building frontend"
+  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/frontend' && npm run build"
+
+  if [[ -n "$ISP_DOCROOT" ]]; then
+    log "Deploying frontend build to ISPConfig docroot: $ISP_DOCROOT"
+    mkdir -p "$ISP_DOCROOT"
+    rsync -a --delete "$APP_DIR/frontend/build/" "$ISP_DOCROOT/"
+
+    cat > "$ISP_DOCROOT/.htaccess" <<HTACCESS
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+HTACCESS
+
+    chown -R "$RUN_USER:$RUN_GROUP" "$ISP_DOCROOT"
+  fi
+}
+
+write_apache_vhost() {
+  local docroot
+  if [[ -n "$ISP_DOCROOT" ]]; then
+    docroot="$ISP_DOCROOT"
+  else
+    docroot="$APP_DIR/frontend/build"
+  fi
+
+  log "Writing Apache vhost: $APACHE_SITE_CONF"
+  cat > "$APACHE_SITE_CONF" <<APACHE
+<VirtualHost *:80>
+    ServerName ${DOMAIN}
+    ServerAlias www.${DOMAIN}
+    DocumentRoot ${docroot}
+
+    <Directory ${docroot}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+
+        <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /
+            RewriteRule ^index\\.html$ - [L]
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule . /index.html [L]
+        </IfModule>
+    </Directory>
+
+    ProxyPreserveHost On
+    ProxyPass /api http://127.0.0.1:${BACKEND_PORT}/api
+    ProxyPassReverse /api http://127.0.0.1:${BACKEND_PORT}/api
+
+    ProxyPass /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
+    ProxyPassReverse /uploads http://127.0.0.1:${BACKEND_PORT}/uploads
+
+    ErrorLog \${APACHE_LOG_DIR}/${DOMAIN}_error.log
+    CustomLog \${APACHE_LOG_DIR}/${DOMAIN}_access.log combined
+</VirtualHost>
+APACHE
+
+  a2ensite "$(basename "$APACHE_SITE_CONF")" >/dev/null
+  apache2ctl configtest
+  systemctl reload apache2
+}
+
+configure_pm2() {
+  local ecosystem_file="$APP_DIR/backend/ecosystem.config.cjs"
+  log "Creating PM2 ecosystem config"
+
+  cat > "$ecosystem_file" <<PM2
+module.exports = {
+  apps: [
+    {
+      name: "${PM2_NAME}",
+      script: "src/index.js",
+      cwd: "${APP_DIR}/backend",
+      env: {
+        NODE_ENV: "production",
+        PORT: "${BACKEND_PORT}"
+      }
+    }
+  ]
+};
+PM2
+
+  chown "$RUN_USER:$RUN_GROUP" "$ecosystem_file"
+
+  log "Starting/reloading PM2 process"
+  sudo -u "$RUN_USER" bash -c "cd '$APP_DIR/backend' && pm2 startOrReload ecosystem.config.cjs --update-env"
+  sudo -u "$RUN_USER" pm2 save
+
+  local run_home
+  run_home="$(eval echo "~${RUN_USER}")"
+  if [[ -d "$run_home" ]]; then
+    pm2 startup systemd -u "$RUN_USER" --hp "$run_home" >/dev/null || true
+  fi
+}
+
+run_health_checks() {
+  log "Running health checks"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsS "http://127.0.0.1:${BACKEND_PORT}/" >/dev/null
+    echo "Backend responded on port ${BACKEND_PORT}."
+  fi
+
+  sudo -u "$RUN_USER" pm2 status "$PM2_NAME" || true
+}
+
+main() {
+  parse_args "$@"
+
+  [[ "$EUID" -eq 0 ]] || die "Run this script as root (sudo)."
+
+  need_cmd sudo
+  need_cmd sed
+  need_cmd grep
+
+  if [[ "$MODE" == "install" ]]; then
+    install_system_packages
+    prepare_app_dir
+    setup_database
+    ensure_backend_env
+    install_node_dependencies_and_build
+    write_apache_vhost
+    configure_pm2
+    run_health_checks
+
+    log "Install completed"
+    echo "Next steps:"
+    echo "1) In ISPConfig, ensure domain ${DOMAIN} points to this server."
+    echo "2) Enable Let's Encrypt SSL for ${DOMAIN}."
+    echo "3) If ISPConfig overwrites Apache vhost, copy directives from ${APACHE_SITE_CONF} into the site's Apache Directives field."
+  else
+    update_code
+    ensure_backend_env
+    install_node_dependencies_and_build
+    configure_pm2
+    run_health_checks
+
+    log "Update completed"
+  fi
+}
+
+main "$@"

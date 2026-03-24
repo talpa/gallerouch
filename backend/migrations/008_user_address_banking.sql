@@ -1,0 +1,7 @@
+-- Migration 008: Add address and banking details to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS postal_code VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_account_number VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_code VARCHAR(20);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_name VARCHAR(255);

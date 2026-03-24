@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build frontend after owner history changes",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Push-Location \"D:\\git\\gallerouch\\frontend\"; npm run build; Pop-Location"
+			],
+			"isBackground": false
+		}
+	]
+}

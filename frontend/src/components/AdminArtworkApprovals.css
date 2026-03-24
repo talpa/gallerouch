@@ -1,0 +1,192 @@
+.admin-artwork-approvals {
+  padding: 2rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
+  border: 1px solid #e9ecef;
+}
+
+.admin-artwork-approvals h2 {
+  margin-bottom: 1.5rem;
+  color: #2c5f2d;
+  border-bottom: 2px solid #a8d5ba;
+  padding-bottom: 0.75rem;
+}
+
+.approvals-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.approvals-filter .user-filter-dropdown {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.approvals-filter .user-filter-dropdown:hover {
+  border-color: #a8d5ba;
+}
+.approvals-filter .user-filter-dropdown:focus {
+  outline: none;
+  border-color: #a8d5ba;
+  box-shadow: 0 0 0 0.2rem rgba(168, 213, 186, 0.25);
+}
+
+.approvals-filter .filter-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.approvals-filter .filter-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.approvals-filter .filter-btn:hover {
+  border-color: #a8d5ba;
+  background-color: #f9fffe;
+}
+
+.approvals-filter .filter-btn.active {
+  background: linear-gradient(135deg, #a8d5ba 0%, #81c784 100%);
+  color: white;
+  border-color: #a8d5ba;
+  box-shadow: 0 0.25rem 0.5rem rgba(168, 213, 186, 0.2);
+}
+
+.artwork-approvals-table {
+  overflow-x: auto;
+  font-size: 0.95rem;
+}
+
+.artwork-approvals-table table {
+  min-width: 800px;
+}
+.artwork-approvals-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+.artwork-approvals-table tbody tr:hover {
+  background-color: #f9fffe;
+}
+
+/* Zarovnání tlačítek v tabulce */
+.artwork-approvals-table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+.artwork-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.artwork-action-buttons .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+.artwork-action-buttons .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+}
+
+.artwork-events-table {
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.artwork-events-table table {
+  margin-bottom: 0;
+}
+
+.artwork-events-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.artwork-events-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.artwork-events-table .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+.artwork-events-table .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+}
+
+/* Badge styling */
+.badge {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.25rem;
+}
+
+/* Modal styling */
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.modal-footer .btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+}
+
+/* Loading spinner */
+.text-center {
+  text-align: center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

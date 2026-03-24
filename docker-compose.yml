@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: gallerouch
+      POSTGRES_PASSWORD: gallerouch
+      POSTGRES_DB: gallerouch
+    ports:
+      - '5433:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./backend/migrations/002_seed_data.sql:/docker-entrypoint-initdb.d/002_seed_data.sql
+      - ./backend/migrations/003_users_and_ownership.sql:/docker-entrypoint-initdb.d/003_users_and_ownership.sql
+      - ./backend/migrations/004_add_provider.sql:/docker-entrypoint-initdb.d/004_add_provider.sql
+      - ./backend/migrations/005_events.sql:/docker-entrypoint-initdb.d/005_events.sql
+      - ./backend/migrations/006_add_price_to_events.sql:/docker-entrypoint-initdb.d/006_add_price_to_events.sql
+      - ./backend/migrations/007_artwork_images.sql:/docker-entrypoint-initdb.d/007_artwork_images.sql
+      - ./backend/migrations/007_add_artwork_images.sql:/docker-entrypoint-initdb.d/007_add_artwork_images.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gallerouch"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  backend:
+    build: ./backend
+    command: node --inspect=0.0.0.0:9229 src/index.js
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/migrations:/app/migrations
+      - ./backend/uploads:/app/uploads
+    ports:
+      - '4777:4777'
+      - '9229:9229'
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgres://gallerouch:gallerouch@db:5432/gallerouch
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    command: npm start
+    ports:
+      - '8080:3000'
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+      - WDS_SOCKET_PORT=3000
+      - WDS_SOCKET_HOST=0.0.0.0
+      - HOST=0.0.0.0
+    depends_on:
+      - backend
+volumes:
+  db_data:

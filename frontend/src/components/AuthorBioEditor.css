@@ -1,0 +1,297 @@
+.author-bio-editor {
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.author-bio-editor h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.author-bio-editor h3 {
+  color: #555;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.author-bio-editor h5 {
+  color: #666;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* BIO SECTION */
+.bio-section {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #667eea;
+}
+
+.bio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.bio-header h3 {
+  margin: 0;
+}
+
+.bio-header button {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.bio-editor {
+  width: 100%;
+}
+
+.quill-wrapper {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.quill-wrapper .ql-editor {
+  min-height: 250px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.quill-wrapper .ql-toolbar {
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.bio-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bio-actions .btn {
+  padding: 0.5rem 1rem;
+}
+
+.bio-display {
+  min-height: 100px;
+}
+
+.bio-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+  word-wrap: break-word;
+}
+
+.bio-content h1, .bio-content h2, .bio-content h3 {
+  color: #333;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.bio-content strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.bio-content em, .bio-content i {
+  font-style: italic;
+}
+
+.bio-content u {
+  text-decoration: underline;
+}
+
+.bio-content a {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+.bio-content a:hover {
+  color: #764ba2;
+}
+
+.bio-content ol, .bio-content ul {
+  margin-left: 2rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.bio-content blockquote {
+  border-left: 4px solid #667eea;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+/* APPROVAL STATUS */
+.approval-status {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.approval-status .badge {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* ARTWORK TYPES SECTION */
+.artwork-types-section {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border-left: 4px solid #764ba2;
+}
+
+.artwork-types-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.artwork-type-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.375rem;
+  border-left: 3px solid #667eea;
+  transition: all 0.2s ease;
+}
+
+.artwork-type-item:hover {
+  background: #e8ebf0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.type-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.type-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.artwork-type-item .btn-danger {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* ADD TYPES SECTION */
+.add-types-section {
+  background: #f0f4f8;
+  padding: 1.5rem;
+  border-radius: 0.375rem;
+  border: 1px dashed #667eea;
+}
+
+.types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.types-grid .btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* ALERTS */
+.author-bio-editor .alert {
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.author-bio-editor .alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.author-bio-editor .alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.author-bio-editor .alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+  color: #856404;
+}
+
+.author-bio-editor .btn-close {
+  padding: 0.25rem;
+  opacity: 0.7;
+}
+
+.author-bio-editor .btn-close:hover {
+  opacity: 1;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .author-bio-editor {
+    padding: 1rem;
+  }
+
+  .bio-section {
+    padding: 1rem;
+  }
+
+  .bio-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .bio-header button {
+    width: 100%;
+  }
+
+  .quill-wrapper .ql-editor {
+    min-height: 200px;
+  }
+
+  .bio-actions {
+    flex-direction: column;
+  }
+
+  .bio-actions .btn {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .artwork-type-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .artwork-type-item .btn-danger {
+    width: 100%;
+  }
+
+  .types-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}

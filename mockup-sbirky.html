@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sbírky - Česká stopa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            padding: 60px 20px;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            max-width: 600px;
+        }
+
+        /* Filter Section */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #374151;
+            margin-right: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #d1d5db;
+            background: #f3f4f6;
+        }
+
+        .filter-btn.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 50px 0 30px 0;
+            color: #1f2937;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid #2563eb;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .card.medici {
+            border-top-color: #2563eb;
+        }
+
+        .card.obrance {
+            border-top-color: #16a34a;
+        }
+
+        .card.civiliste {
+            border-top-color: #ea580c;
+        }
+
+        .card.zvirata {
+            border-top-color: #9333ea;
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-header-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .card-category {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-recipient {
+            font-size: 0.95rem;
+            color: #4b5563;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .progress-container {
+            margin-bottom: 15px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .progress-header .amount {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .progress-header .goal {
+            color: #6b7280;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .card.obrance .progress-fill {
+            background: linear-gradient(90deg, #16a34a, #15803d);
+        }
+
+        .card.civiliste .progress-fill {
+            background: linear-gradient(90deg, #ea580c, #c2410c);
+        }
+
+        .card.zvirata .progress-fill {
+            background: linear-gradient(90deg, #9333ea, #7e22ce);
+        }
+
+        .progress-percent {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #6b7280;
+            padding-top: 15px;
+            border-top: 1px solid #f3f4f6;
+            margin-bottom: 15px;
+        }
+
+        .time-left {
+            font-weight: 600;
+            color: #ea580c;
+        }
+
+        .card-footer {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 20px 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Featured Section */
+        .featured-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin: 60px 0;
+            border-left: 4px solid #ea580c;
+        }
+
+        .featured-section h2 {
+            color: #92400e;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .featured-section p {
+            color: #b45309;
+            margin-bottom: 15px;
+        }
+
+        .featured-section .progress-bar {
+            background: rgba(92, 40, 0, 0.2);
+        }
+
+        .featured-section .progress-fill {
+            background: linear-gradient(90deg, #ea580c, #d97706);
+        }
+
+        /* Closed Collections Table */
+        .closed-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f3f4f6;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        th {
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-medici {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-obrance {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-civiliste {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .badge-zvirata {
+            background: #e9d5ff;
+            color: #6b21a8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                justify-content: flex-start;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 10px 12px;
+            }
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🇺🇦 Aktivní sbírky</h1>
+            <p>Zapojte se do pomoci Ukrajině. Vyberte si sbírku, která vám dává smysl, a přispějte příspěvkem nebo sdílením.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Aktivních sbírek</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">342+</div>
+                <div class="stat-label">Přispěvatelů</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">850K Kč</div>
+                <div class="stat-label">Vybráno celkem</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <span class="filter-label">Filtrovat:</span>
+            <button class="filter-btn active">Všechny</button>
+            <button class="filter-btn">🏥 Medici</button>
+            <button class="filter-btn">🎖️ Obránci</button>
+            <button class="filter-btn">👥 Civilisté</button>
+            <button class="filter-btn">🐾 Zvířata</button>
+        </div>
+
+        <!-- Featured Collection -->
+        <div class="featured-section">
+            <h2>⚡ Nejnaléhavější sbírka</h2>
+            <p><strong>Chirurgické nástroje pro lékaře v Charkovské nemocnici</strong></p>
+            <p>Zbývá 14 dní. Pomáhejme předcházet zbytečným amputacím.</p>
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span class="amount">285 000 Kč</span>
+                    <span class="goal">/ 400 000 Kč (71%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 71%"></div>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 15px; width: auto;">Podpořit sbírku</button>
+        </div>
+
+        <!-- Active Collections -->
+        <h2 class="section-title">Aktivní sbírky</h2>
+        <div class="cards-grid">
+            <!-- Card 1 -->
+            <div class="card medici">
+                <div class="card-header">
+                    <div class="card-icon">🏥</div>
+                    <div class="card-header-content">
+                        <h3>Chirurgické nástroje</h3>
+                        <div class="card-category">Medici</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">Charkovská nemocnice</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">285 000 Kč</span>
+                            <span class="goal">/ 400 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 71%"></div>
+                        </div>
+                        <div class="progress-percent">71% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 14 dní zbývá</span>
+                        <span>👥 156 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card obrance">
+                <div class="card-header">
+                    <div class="card-icon">🎖️</div>
+                    <div class="card-header-content">
+                        <h3>Pozorovací drony</h3>
+                        <div class="card-category">Obránci</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">Obránce Donbasu</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">450 000 Kč</span>
+                            <span class="goal">/ 500 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 90%"></div>
+                        </div>
+                        <div class="progress-percent">90% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 8 dní zbývá</span>
+                        <span>👥 89 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card medici">
+                <div class="card-header">
+                    <div class="card-icon">🦾</div>
+                    <div class="card-header-content">
+                        <h3>3D tisk protéz</h3>
+                        <div class="card-category">Medici</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">3D tisk horních končetin na míru</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">120 000 Kč</span>
+                            <span class="goal">/ 250 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 48%"></div>
+                        </div>
+                        <div class="progress-percent">48% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 21 dní zbývá</span>
+                        <span>👥 67 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="card civiliste">
+                <div class="card-header">
+                    <div class="card-icon">🏠</div>
+                    <div class="card-header-content">
+                        <h3>Humanitární centrum</h3>
+                        <div class="card-category">Civilisté</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">Ševčenkove - Pomoc uprchlíkům</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">65 000 Kč</span>
+                            <span class="goal">/ 150 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 43%"></div>
+                        </div>
+                        <div class="progress-percent">43% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 28 dní zbývá</span>
+                        <span>👥 124 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="card obrance">
+                <div class="card-header">
+                    <div class="card-icon">🚍</div>
+                    <div class="card-header-content">
+                        <h3>Vojenský výcvik</h3>
+                        <div class="card-category">Obránci</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">Doprava na vojenský výcvik</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">180 000 Kč</span>
+                            <span class="goal">/ 200 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 90%"></div>
+                        </div>
+                        <div class="progress-percent">90% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 5 dní zbývá</span>
+                        <span>👥 45 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+
+            <!-- Card 6 -->
+            <div class="card zvirata">
+                <div class="card-header">
+                    <div class="card-icon">🐾</div>
+                    <div class="card-header-content">
+                        <h3>Péče o zvířata</h3>
+                        <div class="card-category">Zvířata</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-recipient">Útulky pro opuštěná zvířata</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="amount">95 000 Kč</span>
+                            <span class="goal">/ 180 000 Kč</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 53%"></div>
+                        </div>
+                        <div class="progress-percent">53% vybráno</div>
+                    </div>
+                    <div class="card-meta">
+                        <span>⏱️ 35 dní zbývá</span>
+                        <span>👥 203 přispěvatelů</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary">Podpořit</button>
+                    <button class="btn btn-secondary">Sdílet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Closed Collections -->
+        <h2 class="section-title">Uzavřené sbírky</h2>
+        <div class="closed-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sbírka</th>
+                        <th>Kategorie</th>
+                        <th>Vybráno</th>
+                        <th>Cíl</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Nákup leteckého simulátoru F-16</strong></td>
+                        <td><span class="badge badge-obrance">Obránci</span></td>
+                        <td>850 000 Kč</td>
+                        <td>850 000 Kč</td>
+                        <td><span class="badge badge-obrance" style="background: #dcfce7; color: #166534;">✓ Splněno</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vybavení pro batalion Bratrstvo</strong></td>
+                        <td><span class="badge badge-obrance">Obránci</span></td>
+                        <td>420 000 Kč</td>
+                        <td>400 000 Kč</td>
+                        <td><span class="badge badge-obrance" style="background: #dcfce7; color: #166534;">✓ Splněno</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vánoční balíčky pro vojáky</strong></td>
+                        <td><span class="badge badge-civiliste">Civilisté</span></td>
+                        <td>156 000 Kč</td>
+                        <td>150 000 Kč</td>
+                        <td><span class="badge badge-civiliste" style="background: #fed7aa; color: #92400e;">✓ Splněno</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Obnova obce Kamjanka v Charkovské oblasti</strong></td>
+                        <td><span class="badge badge-civiliste">Civilisté</span></td>
+                        <td>298 000 Kč</td>
+                        <td>300 000 Kč</td>
+                        <td><span class="badge badge-civiliste" style="background: #fed7aa; color: #92400e;">95% splněno</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Call to Action -->
+        <div style="background: #1f2937; color: white; padding: 50px 30px; border-radius: 12px; text-align: center; margin: 60px 0;">
+            <h2 style="font-size: 1.8rem; margin-bottom: 15px;">Chcete podpořit konkrétní sbírku?</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 25px; opacity: 0.95;">Všechny sbírky vedeme na transparentní platformě Donio.cz.</p>
+            <a href="https://donio.cz/ceskastopaprofil" class="btn btn-primary" style="display: inline-block; width: auto;">Přejít na STOPA na Donio</a>
+        </div>
+    </div>
+</body>
+</html>

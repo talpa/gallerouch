@@ -1,0 +1,69 @@
+/* Global UI Theme: normalize grids, labels, inputs */
+
+:root {
+  --ui-gap: 1rem;
+  --ui-gap-sm: 0.5rem;
+  --ui-gap-lg: 1.5rem;
+  --ui-radius: 8px;
+  --ui-label-color: #495057;
+  --ui-input-border: #ced4da;
+  --ui-input-bg: #ffffff;
+  --ui-input-focus-border: #0d6efd;
+  --ui-input-focus-shadow: rgba(13, 110, 253, 0.25);
+}
+
+/* Grid normalization (Bootstrap gutter variables) */
+.row {
+  --bs-gutter-x: var(--ui-gap);
+  --bs-gutter-y: var(--ui-gap);
+}
+
+/* Grid gap utilities */
+.grid-gap-sm .row { --bs-gutter-x: var(--ui-gap-sm); --bs-gutter-y: var(--ui-gap-sm); }
+.grid-gap-md .row { --bs-gutter-x: var(--ui-gap);    --bs-gutter-y: var(--ui-gap); }
+.grid-gap-lg .row { --bs-gutter-x: var(--ui-gap-lg); --bs-gutter-y: var(--ui-gap-lg); }
+
+/* Form labels */
+label,
+.form-label {
+  font-weight: 600;
+  color: var(--ui-label-color);
+  margin-bottom: 0.35rem;
+}
+
+/* Inputs & selects */
+input.form-control,
+textarea.form-control,
+select.form-select {
+  border-radius: var(--ui-radius);
+  background-color: var(--ui-input-bg);
+  border-color: var(--ui-input-border);
+  padding: 0.6rem 0.75rem;
+}
+
+/* Input focus states */
+input.form-control:focus,
+textarea.form-control:focus,
+select.form-select:focus {
+  border-color: var(--ui-input-focus-border);
+  box-shadow: 0 0 0 0.25rem var(--ui-input-focus-shadow);
+}
+
+/* Group spacing */
+.field-group,
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Compact variants */
+.field-group.compact .form-control,
+.field-group.compact .form-select {
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+}
+
+/* Table consistency (optional minimal tweaks) */
+.table th,
+.table td {
+  vertical-align: middle;
+}

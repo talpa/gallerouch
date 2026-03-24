@@ -1,0 +1,81 @@
+.artwork-detail-page {
+  max-width: 1200px;
+}
+
+.artwork-detail-card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+}
+
+.artwork-detail-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.artwork-no-image {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  color: #6c757d;
+  font-size: 1.2rem;
+}
+
+.history-card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+}
+
+.history-card .card-header {
+  background-color: #a8d5ba;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.history-card .card-header h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.history-card table {
+  margin-bottom: 0;
+}
+
+.history-card td, .history-card th {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+.history-card td small {
+  display: block;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .artwork-detail-image {
+    max-height: 300px;
+    margin-bottom: 1.5rem;
+  }
+
+  .artwork-detail-page .col-md-6 {
+    margin-bottom: 1rem;
+  }
+
+  .history-card table {
+    font-size: 0.875rem;
+  }
+
+  .history-card td, .history-card th {
+    padding: 0.5rem;
+  }
+}

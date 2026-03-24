@@ -1,0 +1,51 @@
+.gallery-form {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+.gallery-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: #2c3e50;
+}
+.gallery-form input,
+.gallery-form textarea {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #dee2e6;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+.gallery-form input:focus,
+.gallery-form textarea:focus {
+  outline: none;
+  border-color: #a8d5ba;
+  box-shadow: 0 0 0 0.2rem rgba(168, 213, 186, 0.25);
+  background-color: #fafff8;
+}
+.gallery-form button {
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #a8d5ba 0%, #81c784 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.gallery-form button:hover {
+  background: linear-gradient(135deg, #8cc99f 0%, #7bc778 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(168, 213, 186, 0.3);
+}
