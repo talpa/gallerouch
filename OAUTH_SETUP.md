@@ -20,6 +20,23 @@ Tento projekt podporuje přihlášení přes Google a Facebook OAuth.
    GOOGLE_CALLBACK_URL=http://localhost:4777/api/auth/google/callback
    ```
 
+## Produkční nastavení Google OAuth (gallerouch.cz)
+
+V Google Cloud Console u stejného OAuth clienta přidej (NEPŘEPISUJ localhost, jen PŘIDEJ):
+
+- **Authorized JavaScript origins**:
+   - `https://gallerouch.cz`
+- **Authorized redirect URIs**:
+   - `https://gallerouch.cz/api/auth/google/callback`
+
+Na serveru v `/var/www/gallerouch/backend/.env` nastav:
+```
+GOOGLE_CALLBACK_URL=https://gallerouch.cz/api/auth/google/callback
+FRONTEND_URL=https://gallerouch.cz
+```
+
+Pak restart: `pm2 restart gallerouch`
+
 ## Nastavení Facebook OAuth
 
 1. Jděte na [Facebook Developers](https://developers.facebook.com/)
@@ -35,6 +52,19 @@ Tento projekt podporuje přihlášení přes Google a Facebook OAuth.
    FACEBOOK_APP_SECRET=your-app-secret
    FACEBOOK_CALLBACK_URL=http://localhost:4777/api/auth/facebook/callback
    ```
+
+## Produkční nastavení Facebook OAuth (gallerouch.cz)
+
+Ve Facebook Developers Console přidej k **Valid OAuth Redirect URIs**:
+```
+https://gallerouch.cz/api/auth/facebook/callback
+```
+
+Na serveru v `/var/www/gallerouch/backend/.env` nastav:
+```
+FACEBOOK_CALLBACK_URL=https://gallerouch.cz/api/auth/facebook/callback
+FRONTEND_URL=https://gallerouch.cz
+```
 
 ## Restart serveru
 
@@ -59,6 +89,3 @@ Facebook OAuth enabled
 
 ## Poznámky
 
-- Bez nastavených OAuth credentials funguje pouze klasické přihlášení username/password
-- OAuth tlačítka jsou viditelná vždy, ale nefungují bez správné konfigurace
-- Uživatelé vytvoření přes OAuth nemají heslo (password_hash = 'oauth-google' nebo 'oauth-facebook')

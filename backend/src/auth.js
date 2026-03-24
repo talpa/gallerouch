@@ -7,6 +7,7 @@ const { Client } = pkg;
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 // Middleware pro ověření JWT tokenu
 export function authenticateToken(req, res, next) {
@@ -133,7 +134,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     (req, res) => {
       const token = createToken(req.user);
       // Přesměruj na frontend s tokenem
-      res.redirect(`http://localhost:3000/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+      res.redirect(`${FRONTEND_URL}/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
         id: req.user.id,
         username: req.user.username,
         email: req.user.email,
@@ -157,7 +158,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
     (req, res) => {
       const token = createToken(req.user);
       // Přesměruj na frontend s tokenem
-      res.redirect(`http://localhost:3000/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+      res.redirect(`${FRONTEND_URL}/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
         id: req.user.id,
         username: req.user.username,
         email: req.user.email,

@@ -321,6 +321,7 @@ ensure_backend_env() {
 
   upsert_env_key "$env_file" "GOOGLE_CALLBACK_URL" "https://${DOMAIN}/api/auth/google/callback"
   upsert_env_key "$env_file" "FACEBOOK_CALLBACK_URL" "https://${DOMAIN}/api/auth/facebook/callback"
+  upsert_env_key "$env_file" "FRONTEND_URL" "https://${DOMAIN}"
 
   chmod 600 "$env_file"
   chown "$RUN_USER:$RUN_GROUP" "$env_file"
