@@ -25,7 +25,13 @@ import { runMigrations } from './migrate.js';
 await runMigrations();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+  : ['https://gallerouch.cz', 'https://www.gallerouch.cz'];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(bodyParser.json());
 app.use(passport.initialize());
 
