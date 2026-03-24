@@ -13,7 +13,7 @@ cd /path/to/gallerouch
 chmod +x scripts/ispconfig-deploy.sh
 
 sudo ./scripts/ispconfig-deploy.sh install \
-    --repo-url https://github.com/tvuj-repo/gallerouch.git \
+    --repo-url https://github.com/talpa/gallerouch.git \
     --domain gallerouch.com \
     --db-password 'SILNE_HESLO' \
     --isp-docroot /var/www/clients/client1/web1/web
@@ -97,7 +97,7 @@ cd /var/www/gallerouch
 ```bash
 # Varianta 1: GIT (doporučeno)
 cd /var/www/gallerouch
-sudo -u www-data git clone https://github.com/tvuj-repo/gallerouch.git .
+sudo -u www-data git clone https://github.com/talpa/gallerouch.git .
 
 # Varianta 2: SCP
 # Z místního počítače:
