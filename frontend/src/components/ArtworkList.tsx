@@ -41,6 +41,7 @@ const ArtworkList: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const isAdmin = user?.role === 'admin';
   const token = useSelector((state: RootState) => state.auth.token);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -384,7 +385,7 @@ const ArtworkList: React.FC = () => {
                     </p>
                   )}
                   <p className="card-description">{art.description}</p>
-                  {art.authorEmail && (
+                  {art.authorName && (
                     <p className="card-author">
                       <small>
                         {t('gallery.author')}: 
@@ -398,11 +399,11 @@ const ArtworkList: React.FC = () => {
                         >
                           {art.authorName}
                         </button>
-                        ({art.authorEmail})
+                        {isAdmin && art.authorEmail && ` (${art.authorEmail})`}
                       </small>
                     </p>
                   )}
-                  {art.userEmail && (
+                  {art.userName && (
                     <p className="card-author">
                       <small>
                         {t('gallery.owner')}: 
@@ -416,7 +417,7 @@ const ArtworkList: React.FC = () => {
                         >
                           {art.userName}
                         </button>
-                        ({art.userEmail})
+                        {isAdmin && art.userEmail && ` (${art.userEmail})`}
                       </small>
                     </p>
                   )}                
@@ -475,7 +476,7 @@ const ArtworkList: React.FC = () => {
                     </p>
                   )}
                   <p className="row-description">{art.description}</p>
-                  {art.userEmail && (
+                  {art.userName && (
                     <p className="row-author">
                       <small>
                         {t('gallery.owner')}: 
@@ -489,11 +490,11 @@ const ArtworkList: React.FC = () => {
                         >
                           {art.userName}
                         </button>
-                        ({art.userEmail})
+                        {isAdmin && art.userEmail && ` (${art.userEmail})`}
                       </small>
                     </p>
                   )}
-                  {art.authorEmail && (
+                  {art.authorName && (
                     <p className="row-author">
                       <small>
                         {t('gallery.author')}: 
@@ -507,7 +508,7 @@ const ArtworkList: React.FC = () => {
                         >
                           {art.authorName}
                         </button>
-                        ({art.authorEmail})
+                        {isAdmin && art.authorEmail && ` (${art.authorEmail})`}
                       </small>
                     </p>
                   )}

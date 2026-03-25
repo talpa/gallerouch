@@ -48,6 +48,7 @@ const UserGalleryBrowser: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const isAdmin = user?.role === 'admin';
   const token = useSelector((state: RootState) => state.auth.token);
 
   const [browseMode, setBrowseMode] = useState<BrowseMode>('authors');
@@ -229,7 +230,7 @@ const UserGalleryBrowser: React.FC = () => {
               onClick={() => setSelectedUser(u)}
             >
               <div className="user-name">{u.username}</div>
-              <div className="user-email">{u.email}</div>
+              {isAdmin && <div className="user-email">{u.email}</div>}
               <div className="user-count">{u.count} {t('gallery.works')}</div>
             </button>
           ))}
