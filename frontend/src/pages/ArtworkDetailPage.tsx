@@ -69,6 +69,7 @@ const ArtworkDetailPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.auth.user);
+  const isAdmin = user?.role === 'admin';
   
   const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [events, setEvents] = useState<ArtworkEvent[]>([]);
@@ -230,10 +231,16 @@ const ArtworkDetailPage: React.FC = () => {
         }
       );
       
-      // Find payment for this artwork that belongs to current user as buyer
-      const artworkPayment = response.data.find(
-        (p: Payment) => p.artworkId === artwork.id && p.buyerId === user.id && p.status === 'unpaid'
+      // Find latest payment for this artwork that belongs to current user as buyer
+      const artworkPayments = response.data.filter(
+        (p: Payment) => p.artworkId === artwork.id && p.buyerId === user.id
       );
+
+      const artworkPayment = artworkPayments.length > 0
+        ? artworkPayments.sort(
+            (a: Payment, b: Payment) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0]
+        : null;
       
       if (artworkPayment) {
         setPayment(artworkPayment);
@@ -375,7 +382,7 @@ const ArtworkDetailPage: React.FC = () => {
                   >
                     {artwork.authorName}
                   </button>
-                  {artwork.authorEmail && ` (${artwork.authorEmail})`}
+                  {isAdmin && artwork.authorEmail && ` (${artwork.authorEmail})`}
                 </div>
               )}
 
@@ -389,7 +396,7 @@ const ArtworkDetailPage: React.FC = () => {
                   >
                     {artwork.userName}
                   </button>
-                  {artwork.userEmail && ` (${artwork.userEmail})`}
+                  {isAdmin && artwork.userEmail && ` (${artwork.userEmail})`}
                 </div>
               )}
 

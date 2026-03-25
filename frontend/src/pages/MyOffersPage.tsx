@@ -3,16 +3,27 @@ import { Container, Row, Col, Card, Badge, Alert, Spinner, Button, Table } from 
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { RootState } from '../store';
 import { getMyOffers, getMySentOffers, markOfferAsRead, markBuyerOfferStatusAsRead, updateOfferStatus, PriceOffer } from '../api/offers';
 import PublicLayout from '../components/PublicLayout';
+
+interface PaymentSummary {
+  id: number;
+  artworkId: number;
+  buyerId: number;
+  status: 'unpaid' | 'paid' | 'cancelled';
+  createdAt: string;
+}
 
 export const MyOffersPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const auth = useSelector((state: RootState) => state.auth);
+  const isAdmin = auth.user?.role === 'admin';
   const [receivedOffers, setReceivedOffers] = useState<PriceOffer[]>([]);
   const [sentOffers, setSentOffers] = useState<PriceOffer[]>([]);
+  const [paymentsByArtwork, setPaymentsByArtwork] = useState<Record<number, PaymentSummary>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,9 +36,12 @@ export const MyOffersPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const [receivedResult, sentResult] = await Promise.allSettled([
+      const [receivedResult, sentResult, paymentsResult] = await Promise.allSettled([
         getMyOffers(auth.token),
-        getMySentOffers(auth.token)
+        getMySentOffers(auth.token),
+        axios.get('/api/payments', {
+          headers: { Authorization: `Bearer ${auth.token}` }
+        })
       ]);
 
       if (receivedResult.status === 'fulfilled') {
@@ -44,7 +58,28 @@ export const MyOffersPage: React.FC = () => {
         console.error('Error fetching sent offers:', sentResult.reason);
       }
 
-      const bothFailed = receivedResult.status === 'rejected' && sentResult.status === 'rejected';
+      if (paymentsResult.status === 'fulfilled') {
+        const rows = (paymentsResult.value.data || []) as PaymentSummary[];
+        const buyerPayments = rows.filter((p) => p.buyerId === auth.user?.id);
+        const latestByArtwork: Record<number, PaymentSummary> = {};
+
+        for (const payment of buyerPayments) {
+          const existing = latestByArtwork[payment.artworkId];
+          if (!existing || new Date(payment.createdAt).getTime() > new Date(existing.createdAt).getTime()) {
+            latestByArtwork[payment.artworkId] = payment;
+          }
+        }
+
+        setPaymentsByArtwork(latestByArtwork);
+      } else {
+        setPaymentsByArtwork({});
+        console.error('Error fetching payments:', paymentsResult.reason);
+      }
+
+      const bothFailed =
+        receivedResult.status === 'rejected' &&
+        sentResult.status === 'rejected' &&
+        paymentsResult.status === 'rejected';
       setError(bothFailed ? t('common.error') : null);
     } catch (err) {
       setError(t('common.error'));
@@ -189,7 +224,9 @@ export const MyOffersPage: React.FC = () => {
                   </td>
                   <td>
                     <div>{offer.buyer_username}</div>
-                    <small className="text-muted">{offer.buyer_email}</small>
+                    {isAdmin && offer.buyer_email && (
+                      <small className="text-muted">{offer.buyer_email}</small>
+                    )}
                     {offer.message && (
                       <div className="mt-2">
                         <small>
@@ -268,12 +305,15 @@ export const MyOffersPage: React.FC = () => {
                     <th>{t('offers.offeredPrice')}</th>
                     <th>{t('offers.createdAt')}</th>
                     <th>{t('offers.status')}</th>
+                    <th>{t('offers.payment') || 'Platba'}</th>
                     <th>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sentOffers.map((offer) => {
                     const hasUnreadStatus = (offer.status === 'accepted' || offer.status === 'rejected') && !offer.buyer_read_at;
+                    const linkedPayment = paymentsByArtwork[offer.artwork_id];
+                    const canPay = offer.status === 'accepted' && linkedPayment?.status === 'unpaid';
                     return (
                       <tr key={offer.id} className={hasUnreadStatus ? 'unread-offer' : ''}>
                         <td>
@@ -286,7 +326,9 @@ export const MyOffersPage: React.FC = () => {
                         </td>
                         <td>
                           <div>{offer.owner_username}</div>
-                          <small className="text-muted">{offer.owner_email}</small>
+                          {isAdmin && offer.owner_email && (
+                            <small className="text-muted">{offer.owner_email}</small>
+                          )}
                         </td>
                         <td>
                           <strong>{formatPrice(offer.offered_price)}</strong>
@@ -294,21 +336,65 @@ export const MyOffersPage: React.FC = () => {
                         <td>{formatDate(offer.created_at)}</td>
                         <td>{getStatusBadge(offer.status)}</td>
                         <td>
-                          {hasUnreadStatus ? (
-                            <Button
-                              variant="info"
-                              size="sm"
-                              onClick={() => handleMarkBuyerStatusAsRead(offer.id)}
-                              className="d-flex align-items-center justify-content-center py-1 px-2"
-                              style={{ fontSize: '0.8rem' }}
-                            >
-                              <span className="me-1">👁</span> {t('offers.markAsRead')}
-                            </Button>
+                          {offer.status === 'accepted' ? (
+                            linkedPayment ? (
+                              <Badge bg={linkedPayment.status === 'unpaid' ? 'danger' : linkedPayment.status === 'paid' ? 'success' : 'secondary'}>
+                                {linkedPayment.status === 'unpaid'
+                                  ? (t('offers.paymentUnpaid') || 'Nezaplaceno')
+                                  : linkedPayment.status === 'paid'
+                                    ? (t('offers.paymentPaid') || 'Zaplaceno')
+                                    : linkedPayment.status}
+                              </Badge>
+                            ) : (
+                              <Badge bg="warning">{t('offers.paymentMissing') || 'Platba nenalezena'}</Badge>
+                            )
                           ) : (
-                            <small className="text-muted">
-                              {offer.status === 'pending' ? t('offers.statusPending') : '✓'}
-                            </small>
+                            <span className="text-muted">-</span>
                           )}
+                        </td>
+                        <td>
+                          <div className="d-flex flex-column gap-1">
+                            {hasUnreadStatus && (
+                              <Button
+                                variant="info"
+                                size="sm"
+                                onClick={() => handleMarkBuyerStatusAsRead(offer.id)}
+                                className="d-flex align-items-center justify-content-center py-1 px-2"
+                                style={{ fontSize: '0.8rem' }}
+                              >
+                                <span className="me-1">👁</span> {t('offers.markAsRead')}
+                              </Button>
+                            )}
+
+                            {offer.status === 'accepted' && (
+                              <>
+                                <Button
+                                  variant="outline-primary"
+                                  size="sm"
+                                  onClick={() => navigate(`/artwork/${offer.artwork_id}`)}
+                                  className="d-flex align-items-center justify-content-center py-1 px-2"
+                                  style={{ fontSize: '0.8rem' }}
+                                >
+                                  {t('offers.openDetail') || 'Detail'}
+                                </Button>
+                                {canPay && (
+                                  <Button
+                                    variant="warning"
+                                    size="sm"
+                                    onClick={() => navigate(`/artwork/${offer.artwork_id}`)}
+                                    className="d-flex align-items-center justify-content-center py-1 px-2"
+                                    style={{ fontSize: '0.8rem' }}
+                                  >
+                                    {t('offers.payNow') || 'Zaplatit'}
+                                  </Button>
+                                )}
+                              </>
+                            )}
+
+                            {offer.status === 'pending' && !hasUnreadStatus && (
+                              <small className="text-muted">{t('offers.statusPending')}</small>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
