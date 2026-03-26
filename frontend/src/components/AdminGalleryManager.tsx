@@ -470,12 +470,12 @@ const AdminGalleryManager: React.FC = () => {
                 <Form.Group className="mb-3">
                   <Form.Label>{t('gallery.artworkType') || 'Typ uměleckého díla'}</Form.Label>
                   <Form.Select
-                    value={formData.artworkTypeId}
-                    onChange={e => setFormData({ ...formData, artworkTypeId: parseInt(e.target.value) })}
+                     value={formData.artworkTypeId.toString()}
+                     onChange={e => setFormData({ ...formData, artworkTypeId: parseInt(e.target.value) || 0 })}
                   >
-                    <option value={0}>-- {t('gallery.selectType') || 'Vyberte typ'} --</option>
+                     <option value="0">-- {t('gallery.selectType') || 'Vyberte typ'} --</option>
                     {artworkTypes.map(type => (
-                      <option key={type.id} value={type.id}>
+                       <option key={type.id} value={type.id.toString()}>
                         {type.name}
                       </option>
                     ))}
