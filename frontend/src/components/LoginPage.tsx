@@ -75,12 +75,6 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="credentials-info">
-            <strong>Testovací účty:</strong>
-            Admin: admin / admin123<br />
-            User: jana / admin123
-          </div>
-
           <div className="divider">
             <span>nebo</span>
           </div>
