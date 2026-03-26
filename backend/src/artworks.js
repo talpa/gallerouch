@@ -6,6 +6,15 @@ const router = express.Router();
 
 // GET /api/artworks
 
+function resolveImageUrl(url) {
+  if (!url) return null;
+  // Replace old hardcoded localhost:4777 URLs with relative paths
+  if (url.startsWith('http://localhost:4777')) {
+    return url.replace('http://localhost:4777', '');
+  }
+  return url;
+}
+
 function toCamel(obj) {
   if (!obj) return obj;
   const map = {
@@ -50,11 +59,14 @@ function toCamel(obj) {
     Object.entries(obj).map(([k, v]) => {
       const key = k.toLowerCase();
       const mappedKey = map[key];
-      if (mappedKey) {
-        return [mappedKey, v];
+      let val = v;
+      if (mappedKey === 'imageUrl' || key === 'image_url' || key === 'imageurl') {
+        val = resolveImageUrl(v);
       }
-      // Pro nepřemapované klíče vrátit lowercase verzi
-      return [key, v];
+      if (mappedKey) {
+        return [mappedKey, val];
+      }
+      return [key, val];
     })
   );
 }
@@ -84,11 +96,7 @@ router.get('/artworks', async (req, res) => {
         at.name as artwork_type_name,
         at.name_en as artwork_type_name_en,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as image_url,
         u.email as user_email,
@@ -208,11 +216,7 @@ router.get('/artworks/by-user/:userId', async (req, res) => {
         at.name as artwork_type_name,
         at.name_en as artwork_type_name_en,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as image_url,
         owner.email as user_email,
@@ -336,11 +340,7 @@ router.get('/artworks/approved', async (req, res) => {
           LIMIT 1
         ), 'skryto') as status,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as image_url,
         a.user_id,
@@ -600,11 +600,7 @@ router.get('/artworks/by-author/:authorId', async (req, res) => {
           LIMIT 1
         ), 'skryto') as status,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as image_url,
         a.user_id,
@@ -674,11 +670,7 @@ router.get('/artworks/by-owner/:ownerId', async (req, res) => {
           LIMIT 1
         ), 'skryto') as status,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as image_url,
         a.user_id,

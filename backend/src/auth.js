@@ -538,11 +538,7 @@ router.get('/admin/artwork-approvals', authenticateToken, requireAdmin, async (r
         a.title,
         a.description,
         CASE 
-          WHEN ai.image_url IS NOT NULL THEN 
-            CASE 
-              WHEN ai.image_url LIKE 'http%' THEN ai.image_url
-              ELSE 'http://localhost:4777' || ai.image_url
-            END
+          WHEN ai.image_url IS NOT NULL THEN ai.image_url
           ELSE NULL
         END as imageUrl,
         COALESCE((SELECT price FROM events WHERE artwork_id = a.id AND approved_at IS NOT NULL AND status = 'approved' ORDER BY created_at DESC LIMIT 1), 0) as price,

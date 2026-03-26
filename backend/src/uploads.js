@@ -62,7 +62,7 @@ router.post('/upload/:artworkId', verifyToken, upload.single('file'), (req, res)
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const imageUrl = `http://localhost:4777/uploads/${req.file.filename}`;
+  const imageUrl = `/uploads/${req.file.filename}`;
   const artworkId = req.params.artworkId;
   
   res.json({ imageUrl, filename: req.file.filename, artworkId });
