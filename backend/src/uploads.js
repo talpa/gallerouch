@@ -68,7 +68,4 @@ router.post('/upload/:artworkId', verifyToken, upload.single('file'), (req, res)
   res.json({ imageUrl, filename: req.file.filename, artworkId });
 });
 
-// Serve uploaded files as static
-router.use(express.static(uploadsDir, { maxAge: '1d' }));
-
 export default router;
