@@ -1076,10 +1076,21 @@ router.post('/artworks/:id/images', authenticateToken, async (req, res) => {
     );
     const nextOrder = orderResult.rows[0].next_order;
     
+    // Auto-set first image as primary
+    const shouldBePrimary = isPrimary || nextOrder === 0;
+    
+    // If marking as primary, unset previous primary
+    if (shouldBePrimary) {
+      await client.query(
+        'UPDATE artwork_images SET is_primary = false WHERE artwork_id = $1',
+        [id]
+      );
+    }
+    
     // Insert new image
     const result = await client.query(
       'INSERT INTO artwork_images (artwork_id, image_url, is_primary, display_order) VALUES ($1, $2, $3, $4) RETURNING *',
-      [id, imageUrl, isPrimary || false, nextOrder]
+      [id, imageUrl, shouldBePrimary, nextOrder]
     );
     
     await client.end();
