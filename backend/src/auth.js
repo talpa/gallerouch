@@ -44,6 +44,71 @@ function createToken(user) {
   );
 }
 
+// Helper funkce pro konverzi snake_case do camelCase
+function toCamel(obj) {
+  if (!obj) return obj;
+  const map = {
+    image_url: 'imageUrl',
+    event_date: 'eventDate',
+    artwork_id: 'artworkId',
+    user_name: 'userName',
+    user_email: 'userEmail',
+    user_bio: 'userBio',
+    author_name: 'authorName',
+    author_email: 'authorEmail',
+    author_bio: 'authorBio',
+    author_id: 'authorId',
+    artwork_name: 'artworkName',
+    artwork_type_id: 'artworkTypeId',
+    artwork_type_name: 'artworkTypeName',
+    artwork_type_name_en: 'artworkTypeNameEn',
+    type: 'type',
+    date: 'date',
+    status: 'status',
+    id: 'id',
+    imageurl: 'imageUrl',
+    userid: 'userId',
+    approveddatetime: 'approvedDateTime',
+    eventtype: 'eventType',
+    eventstatus: 'eventStatus',
+    approved_at: 'approvedAt',
+    approved_by: 'approvedBy',
+    created_at: 'createdAt',
+    created_by: 'createdBy',
+    created_by_name: 'createdByName',
+    created_by_email: 'createdByEmail',
+    user_id: 'userId',
+    owner_id: 'ownerId',
+    owner_name: 'ownerName',
+    owner_email: 'ownerEmail',
+    is_primary: 'isPrimary',
+    display_order: 'displayOrder',
+    updated_at: 'updatedAt',
+    address: 'address',
+    city: 'city',
+    postal_code: 'postalCode',
+    birth_number: 'birthNumber',
+    permanent_address: 'permanentAddress',
+    permanent_city: 'permanentCity',
+    permanent_postal_code: 'permanentPostalCode',
+    country: 'country',
+    bank_account_number: 'bankAccountNumber',
+    bank_code: 'bankCode',
+    bank_name: 'bankName',
+    profile_approved: 'profileApproved'
+  };
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => {
+      const key = k.toLowerCase();
+      const mappedKey = map[key];
+      if (mappedKey) {
+        return [mappedKey, v];
+      }
+      return [key, v];
+    })
+  );
+}
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
