@@ -57,6 +57,15 @@ const UserArtworkManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const getStatusLabel = (status: ArtworkStatus): string => {
+    const statusMap: Record<ArtworkStatus, string> = {
+      skryto: t('gallery.statusHidden'),
+      vystaveno: t('gallery.statusExhibited'),
+      zrušeno: t('gallery.statusCancelled'),
+    };
+    return statusMap[status] || status;
+  };
+
   useEffect(() => {
     loadArtworks();
     loadUsers();
@@ -147,7 +156,7 @@ const UserArtworkManager: React.FC = () => {
   const handleEdit = (artwork: UserArtwork) => {
     // Prevent editing if current user is not the owner anymore
     if (artwork.userId !== (user?.id || 0)) {
-      setError(t('gallery.editNotAllowed') || 'Upravit může pouze současný majitel.');
+      setError(t('gallery.editNotAllowed'));
       return;
     }
     setEditingArtwork(artwork);
@@ -165,20 +174,20 @@ const UserArtworkManager: React.FC = () => {
   const handleDelete = async (id: number) => {
     const art = artworks.find(a => a.id === id);
     if (art && art.userId !== (user?.id || 0)) {
-      setError(t('gallery.deleteNotAllowed') || 'Smazat může pouze současný majitel.');
+      setError(t('gallery.deleteNotAllowed'));
       return;
     }
-    if (!window.confirm('Opravdu chcete smazat tento artwork?')) return;
+    if (!window.confirm(t('gallery.confirmDeleteArtwork'))) return;
     
     try {
       await axios.delete(`/api/artworks/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSuccess('Artwork byl úspěšně smazán');
+      setSuccess(t('messages.artworkDeleted'));
       setTimeout(() => setSuccess(null), 3000);
       loadArtworks();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Chyba při mazání');
+      setError(err.response?.data?.error || t('messages.error'));
     }
   };
 
@@ -204,13 +213,13 @@ const UserArtworkManager: React.FC = () => {
             'Content-Type': 'application/json'
           }
         });
-        setSuccess('Artwork byl úspěšně aktualizován');
+        setSuccess(t('messages.artworkUpdated'));
       } else {
         const res = await axios.post('/api/artworks', artworkData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         artworkId = res.data.id;
-        setSuccess('Artwork byl úspěšně vytvořen');
+        setSuccess(t('messages.artworkCreated'));
       }
 
       // Upload image if provided
@@ -231,7 +240,7 @@ const UserArtworkManager: React.FC = () => {
       setEditingArtwork(null);
       loadArtworks();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Chyba při ukládání');
+      setError(err.response?.data?.error || t('messages.error'));
     } finally {
       setLoading(false);
     }
@@ -283,7 +292,7 @@ const UserArtworkManager: React.FC = () => {
           <input
             type="text"
             className="gallery-search"
-            placeholder="Hledat..."
+            placeholder={t('gallery.searchArtworks')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -291,30 +300,30 @@ const UserArtworkManager: React.FC = () => {
 
         <div className="controls-middle">
           <div className="filter-group">
-            <span className="filter-label">Status:</span>
+            <span className="filter-label">{t('gallery.status')}:</span>
             <button
               className={`filter-btn filter-btn-compact ${selectedStatus === 'všechny' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('všechny')}
             >
-              Vše ({artworks.length})
+              {t('gallery.all')} ({artworks.length})
             </button>
             <button
               className={`filter-btn filter-btn-compact ${selectedStatus === 'skryto' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('skryto')}
             >
-              Skr. ({artworks.filter(a => a.status === 'skryto').length})
+              {t('gallery.hiddenShort')} ({artworks.filter(a => a.status === 'skryto').length})
             </button>
             <button
               className={`filter-btn filter-btn-compact ${selectedStatus === 'vystaveno' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('vystaveno')}
             >
-              Vyst. ({artworks.filter(a => a.status === 'vystaveno').length})
+              {t('gallery.exhibitedShort')} ({artworks.filter(a => a.status === 'vystaveno').length})
             </button>
             <button
               className={`filter-btn filter-btn-compact ${selectedStatus === 'zrušeno' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('zrušeno')}
             >
-              Zruš. ({artworks.filter(a => a.status === 'zrušeno').length})
+              {t('gallery.cancelledShort')} ({artworks.filter(a => a.status === 'zrušeno').length})
             </button>
           </div>
         </div>
@@ -324,14 +333,14 @@ const UserArtworkManager: React.FC = () => {
             <button
               className={`view-btn ${viewMode === 'card' ? 'active' : ''}`}
               onClick={() => setViewMode('card')}
-              title="Zobrazení jako dlaždice"
+              title={t('view.cards')}
             >
               ⊞
             </button>
             <button
               className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
               onClick={() => setViewMode('list')}
-              title="Zobrazení jako seznam"
+              title={t('view.list')}
             >
               ≡
             </button>
@@ -340,8 +349,10 @@ const UserArtworkManager: React.FC = () => {
       </div>
 
       <div className="gallery-results-info mb-3">
-        Zobrazeno: <strong>{filteredArtworks.length}</strong> z <strong>{artworks.length}</strong> děl
-        {browseMode === 'owner' ? ' • režim: Majitel' : ' • režim: Autor'}
+        {t('gallery.displayed')}: <strong>{filteredArtworks.length}</strong> {t('gallery.of')} <strong>{artworks.length}</strong> {t('gallery.works')}
+        {browseMode === 'owner'
+          ? ` • ${t('gallery.mode')}: ${t('gallery.owner')}`
+          : ` • ${t('gallery.mode')}: ${t('gallery.author')}`}
       </div>
 
       {/* Zobrazení jako seznam */}
@@ -350,15 +361,15 @@ const UserArtworkManager: React.FC = () => {
           <thead className="table-dark">
             <tr>
               <th>ID</th>
-              <th>Název</th>
-              <th>Cena</th>
-              <th>Status</th>
-              <th>Akce</th>
+              <th>{t('gallery.artworkTitle')}</th>
+              <th>{t('gallery.price')}</th>
+              <th>{t('gallery.status')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredArtworks.length === 0 ? (
-              <tr><td colSpan={5} className="text-center text-muted">Žádné artwork</td></tr>
+              <tr><td colSpan={5} className="text-center text-muted">{t('gallery.noArtworks')}</td></tr>
             ) : filteredArtworks.map(art => (
               <tr key={art.id}>
                 <td>{art.id}</td>
@@ -370,17 +381,17 @@ const UserArtworkManager: React.FC = () => {
                     art.status === 'skryto' ? 'secondary' :
                     art.status === 'zrušeno' ? 'danger' : 'warning'
                   }>
-                    {art.status}
+                    {getStatusLabel(art.status)}
                   </Badge>
                 </td>
                 <td>
                   {browseMode === 'owner' && (
                     <>
-                      <Button variant="warning" size="sm" onClick={() => handleEdit(art)} title="Upravit artwork">
-                        ✏️ Upravit
+                      <Button variant="warning" size="sm" onClick={() => handleEdit(art)} title={t('actions.editArtwork')}>
+                        ✏️ {t('common.edit')}
                       </Button>{' '}
-                      <Button variant="danger" size="sm" onClick={() => handleDelete(art.id)} title="Smazat artwork">
-                        🗑️ Smazat
+                      <Button variant="danger" size="sm" onClick={() => handleDelete(art.id)} title={t('actions.deleteArtwork')}>
+                        🗑️ {t('common.delete')}
                       </Button>
                     </>
                   )}
@@ -395,7 +406,7 @@ const UserArtworkManager: React.FC = () => {
       {viewMode === 'card' && (
         <div className="gallery-grid">
           {filteredArtworks.length === 0 ? (
-            <p className="text-center text-muted">Žádné artwork</p>
+            <p className="text-center text-muted">{t('gallery.noArtworks')}</p>
           ) : filteredArtworks.map(art => (
             <div key={art.id} className="artwork-card">
               <div className="artwork-image">
@@ -415,17 +426,17 @@ const UserArtworkManager: React.FC = () => {
                     art.status === 'skryto' ? 'secondary' :
                     art.status === 'zrušeno' ? 'danger' : 'warning'
                   }>
-                    {art.status}
+                    {getStatusLabel(art.status)}
                   </Badge>
                 </div>
                 <div className="artwork-actions mt-2">
                   {browseMode === 'owner' && (
                     <>
                       <Button variant="warning" size="sm" onClick={() => handleEdit(art)}>
-                        ✏️ Upravit
+                        ✏️ {t('common.edit')}
                       </Button>{' '}
                       <Button variant="danger" size="sm" onClick={() => handleDelete(art.id)}>
-                        🗑️ Smazat
+                        🗑️ {t('common.delete')}
                       </Button>
                     </>
                   )}
@@ -438,14 +449,14 @@ const UserArtworkManager: React.FC = () => {
       
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{editingArtwork ? 'Upravit artwork' : 'Nový artwork'}</Modal.Title>
+          <Modal.Title>{editingArtwork ? t('gallery.editArtwork') : t('gallery.newArtwork')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k as any)} className="mb-3">
-            <Tab eventKey="details" title="📝 Základní údaje">
+            <Tab eventKey="details" title={t('tabs.basicInfo')}>
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Název</Form.Label>
+                  <Form.Label>{t('gallery.fieldTitle')}</Form.Label>
                   <Form.Control
                     type="text"
                     value={formData.title}
@@ -454,7 +465,7 @@ const UserArtworkManager: React.FC = () => {
                   />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Popis</Form.Label>
+                  <Form.Label>{t('gallery.fieldDescription')}</Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={3}
@@ -463,29 +474,29 @@ const UserArtworkManager: React.FC = () => {
                   />
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Autor</Form.Label>
+                  <Form.Label>{t('gallery.author')}</Form.Label>
                   <Form.Select
                     value={formData.authorId}
                     onChange={e => setFormData({ ...formData, authorId: parseInt(e.target.value) })}
                     required
                   >
-                    <option value="">Vyberte autora...</option>
+                    <option value="">{t('gallery.selectAuthor')}</option>
                     {users.map(u => (
                       <option key={u.id} value={u.id}>{u.username}</option>
                     ))}
                   </Form.Select>
                   <Form.Text className="text-muted">
-                    Autor díla (nemění se při prodeji)
+                    {t('gallery.authorHelp')}
                   </Form.Text>
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>Typ uměleckého díla</Form.Label>
+                  <Form.Label>{t('gallery.artworkType')}</Form.Label>
                   <Form.Select
                     value={formData.artworkTypeId}
                     onChange={e => setFormData({ ...formData, artworkTypeId: parseInt(e.target.value) })}
                     required
                   >
-                    <option value="">Vyberte typ...</option>
+                    <option value="">{t('gallery.selectType')}</option>
                     {artworkTypes
                       .filter(t => approvedArtworkTypes.includes(t.id))
                       .map(t => (
@@ -493,16 +504,16 @@ const UserArtworkManager: React.FC = () => {
                       ))}
                   </Form.Select>
                   <Form.Text className="text-muted">
-                    Jsou dostupné jen typy, které máte schválené v profilu
+                    {t('gallery.approvedTypesOnly')}
                   </Form.Text>
                 </Form.Group>
                 <Button variant="success" type="submit" disabled={loading}>
-                  {loading ? '⏳ Ukládám...' : editingArtwork ? '💾 Uložit změny' : '✅ Vytvořit'}
+                  {loading ? `⏳ ${t('common.loading')}` : editingArtwork ? `💾 ${t('buttons.save')}` : `✅ ${t('buttons.create')}`}
                 </Button>
               </Form>
             </Tab>
             {editingArtwork && (
-              <Tab eventKey="images" title="🖼️ Obrázky">
+              <Tab eventKey="images" title={t('tabs.images')}>
                 <ArtworkImageManager 
                   artworkId={editingArtwork.id}
                   onImagesUpdated={() => loadArtworks()}
@@ -510,7 +521,7 @@ const UserArtworkManager: React.FC = () => {
               </Tab>
             )}
             {editingArtwork && (
-              <Tab eventKey="events" title="📌 Události">
+              <Tab eventKey="events" title={t('tabs.events')}>
                 <ArtworkEventsManager 
                   artworkId={editingArtwork.id}
                   onEventsUpdated={() => loadArtworks()}
