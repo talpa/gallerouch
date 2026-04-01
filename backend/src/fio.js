@@ -8,7 +8,10 @@
 
 class FioApi {
   constructor(token, accountNumber = null) {
-    this.token = token;
+    // Token from .env may accidentally include whitespace or wrapping quotes.
+    this.token = typeof token === 'string'
+      ? token.trim().replace(/^['\"]|['\"]$/g, '')
+      : token;
     this.accountNumber = accountNumber; // e.g., "2400078999/2010"
     this.baseUrl = 'https://www.fio.cz/iss/api/rest';
   }
@@ -32,7 +35,10 @@ class FioApi {
     }
 
     try {
-      const url = `${this.baseUrl}/periods/${this.token}/${dateFrom}/${dateTo}/transactions.json`;
+      const encodedToken = encodeURIComponent(this.token);
+      const encodedFrom = encodeURIComponent(dateFrom);
+      const encodedTo = encodeURIComponent(dateTo);
+      const url = `${this.baseUrl}/periods/${encodedToken}/${encodedFrom}/${encodedTo}/transactions.json`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -40,11 +46,30 @@ class FioApi {
         },
       });
 
+      const contentType = (response.headers.get('content-type') || '').toLowerCase();
+      const responseText = await response.text();
+
       if (!response.ok) {
-        throw new Error(`Fio API error: ${response.status} ${response.statusText}`);
+        const preview = responseText.slice(0, 200).replace(/\s+/g, ' ').trim();
+        throw new Error(
+          `Fio API error: ${response.status} ${response.statusText}; content-type=${contentType || 'unknown'}; body=${preview}`
+        );
       }
 
-      const data = await response.json();
+      if (!contentType.includes('application/json')) {
+        const preview = responseText.slice(0, 200).replace(/\s+/g, ' ').trim();
+        throw new Error(
+          `Fio API error: Expected JSON but received content-type=${contentType || 'unknown'}; body=${preview}; possible causes: invalid/expired token or wrong endpoint URL`
+        );
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        const preview = responseText.slice(0, 200).replace(/\s+/g, ' ').trim();
+        throw new Error(`Fio API error: Invalid JSON response; body=${preview}`);
+      }
       
       // Return transactions array from accountStatement
       if (data.accountStatement && data.accountStatement.transactionList) {
