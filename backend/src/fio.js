@@ -13,7 +13,24 @@ class FioApi {
       ? token.trim().replace(/^['\"]|['\"]$/g, '')
       : token;
     this.accountNumber = accountNumber; // e.g., "2400078999/2010"
-    this.baseUrl = process.env.FIO_API_BASE_URL || 'https://www.fio.cz/ib_api/rest';
+
+    const configuredBaseUrl = (process.env.FIO_API_BASE_URL || '').trim();
+    this.baseUrl = this.normalizeBaseUrl(configuredBaseUrl || 'https://fioapi.fio.cz/v1/rest');
+  }
+
+  normalizeBaseUrl(baseUrl) {
+    const normalized = baseUrl.replace(/\/+$/, '');
+
+    // Fio legacy endpoints may return HTML homepage instead of API JSON.
+    if (
+      normalized.includes('www.fio.cz/ib_api/rest')
+      || normalized.includes('api.fio.cz/ib_api/rest')
+      || normalized.includes('www.fio.cz/iss/api/rest')
+    ) {
+      return 'https://fioapi.fio.cz/v1/rest';
+    }
+
+    return normalized;
   }
 
   /**
@@ -59,7 +76,7 @@ class FioApi {
       if (!contentType.includes('application/json')) {
         const preview = responseText.slice(0, 200).replace(/\s+/g, ' ').trim();
         throw new Error(
-          `Fio API error: Expected JSON but received content-type=${contentType || 'unknown'}; body=${preview}; possible causes: invalid/expired token or wrong endpoint URL`
+          `Fio API error: Expected JSON but received content-type=${contentType || 'unknown'}; url=${url}; body=${preview}; possible causes: invalid/expired token or wrong endpoint URL`
         );
       }
 

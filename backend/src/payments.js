@@ -576,6 +576,7 @@ export async function syncFioPayments() {
     await client.connect();
 
     const fio = new FioApi(fioToken);
+    console.log(`[Fio Sync] Using Fio base URL: ${fio.baseUrl}`);
 
     // Načíst transakce za posledních 7 dní
     const sinceDate = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
