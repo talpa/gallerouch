@@ -95,7 +95,17 @@ function toCamel(obj) {
     bank_account_number: 'bankAccountNumber',
     bank_code: 'bankCode',
     bank_name: 'bankName',
-    profile_approved: 'profileApproved'
+    profile_approved: 'profileApproved',
+    profile_approved_at: 'profileApprovedAt',
+    profile_approved_by: 'profileApprovedBy',
+    bio: 'bio',
+    bio_en: 'bioEn',
+    bio_approved: 'bioApproved',
+    bio_approved_at: 'bioApprovedAt',
+    bio_approved_by: 'bioApprovedBy',
+    bio_en_approved: 'bioEnApproved',
+    bio_en_approved_at: 'bioEnApprovedAt',
+    bio_en_approved_by: 'bioEnApprovedBy'
   };
   return Object.fromEntries(
     Object.entries(obj).map(([k, v]) => {

@@ -131,6 +131,7 @@ const AdminProfileApprovals: React.FC = () => {
             <tr>
               <th>{t('profile.username') || 'Uživatel'}</th>
               <th>{t('profile.email')}</th>
+              <th>{t('profile.bio') || 'Biografie'}</th>
               <th>{t('profile.role')}</th>
               <th>{t('profile.approvalStatus')}</th>
               <th>{t('profile.registered')}</th>
@@ -142,6 +143,13 @@ const AdminProfileApprovals: React.FC = () => {
               <tr key={user.id}>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
+                <td>
+                  <div style={{ fontSize: '0.85rem' }}>
+                    {user.bio && <span style={{ color: '#28a745', marginRight: '0.5rem' }}>🇨🇿 CS</span>}
+                    {user.bio_en && <span style={{ color: '#007bff' }}>🇬🇧 EN</span>}
+                    {!user.bio && !user.bio_en && <em style={{ color: '#999' }}>-</em>}
+                  </div>
+                </td>
                 <td>
                   <span className={`badge ${user.role === 'admin' ? 'bg-danger' : 'bg-secondary'}`}>
                     {user.role}
