@@ -127,6 +127,26 @@
 }
 
 @media (max-width: 992px) {
+  .payments-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .payments-filters .btn,
+  .user-group-header .btn {
+    width: 100%;
+  }
+
+  .user-group-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-stats {
+    justify-content: flex-start;
+  }
+
   .payments-table {
     font-size: 0.875rem;
   }
@@ -134,5 +154,47 @@
   .payments-table thead th,
   .payments-table tbody td {
     padding: 0.5rem;
+  }
+
+  .payments-table .d-flex {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-card {
+    padding: 1rem;
+  }
+
+  .summary-count {
+    font-size: 1.25rem;
+  }
+
+  .summary-amount {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-payments-manager {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .payments-filters .btn,
+  .user-group-header .btn {
+    font-size: 0.78rem;
+  }
+
+  .payments-table {
+    font-size: 0.78rem;
+  }
+
+  .payments-table thead th,
+  .payments-table tbody td {
+    padding: 0.4rem;
   }
 }

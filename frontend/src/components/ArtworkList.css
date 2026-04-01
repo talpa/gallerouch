@@ -774,6 +774,66 @@
     padding: 1.25rem;
   }
 
+  .controls-row {
+    align-items: stretch;
+  }
+
+  .controls-row-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .controls-row-filters,
+  .controls-row-type-filter {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(168, 213, 186, 0.7);
+    border-radius: 10px;
+    padding: 0.75rem;
+  }
+
+  .controls-row-type-filter {
+    border-top: 2px solid rgba(74, 124, 89, 0.25);
+    margin-top: 0.25rem;
+  }
+
+  .controls-row-filters .filter-group,
+  .controls-row-type-filter .filter-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .controls-row-filters .filter-label,
+  .controls-row-type-filter .filter-label {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.25rem;
+  }
+
+  .controls-row-filters .filter-btn,
+  .controls-row-type-filter .filter-btn {
+    width: 100%;
+    text-align: left;
+    white-space: normal;
+    padding: 0.65rem 0.85rem;
+    line-height: 1.3;
+    transform: none;
+  }
+
+  .controls-row-filters .filter-btn:hover,
+  .controls-row-filters .filter-btn.active,
+  .controls-row-type-filter .filter-btn:hover,
+  .controls-row-type-filter .filter-btn.active {
+    transform: none;
+  }
+
+  .view-toggle-compact {
+    align-self: flex-end;
+  }
+
   .filter-btn {
     padding: 0.6rem 1rem;
     font-size: 0.85rem;
@@ -836,10 +896,16 @@
     gap: 0.5rem;
   }
 
-  .filter-btn {
-    flex: 1;
-    font-size: 0.75rem;
-    padding: 0.5rem 0.75rem;
+  .controls-row-filters .filter-btn,
+  .controls-row-type-filter .filter-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .controls-row-filters,
+  .controls-row-type-filter {
+    padding: 0.65rem;
+    border-radius: 8px;
   }
 
   .artwork-grid {
@@ -876,6 +942,34 @@
     width: 40px;
     height: 40px;
     font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .gallery-container {
+    padding: 0 0.5rem;
+  }
+
+  .gallery-controls,
+  .controls-row-filters,
+  .controls-row-type-filter {
+    padding: 0.5rem;
+  }
+
+  .controls-row-filters .filter-btn,
+  .controls-row-type-filter .filter-btn {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .gallery-search {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .gallery-results-info {
+    font-size: 0.82rem;
+    padding: 0.85rem;
   }
 }
 

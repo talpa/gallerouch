@@ -202,6 +202,27 @@ const ArtworkList: React.FC = () => {
     });
   }, [visibleArtworks, selectedStatus, selectedArtworkType, searchTerm]);
 
+  // Count bases for cross-filtered button totals:
+  // Status counts respect selected artwork type; type counts respect selected status.
+  const statusCountBase = useMemo(() => {
+    return visibleArtworks.filter(art => {
+      const typeMatch = selectedArtworkType === 'všechny' || art.artworkTypeId === selectedArtworkType;
+      const searchMatch = art.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         art.description.toLowerCase().includes(searchTerm.toLowerCase());
+      return typeMatch && searchMatch;
+    });
+  }, [visibleArtworks, selectedArtworkType, searchTerm]);
+
+  const typeCountBase = useMemo(() => {
+    return visibleArtworks.filter(art => {
+      const normalizedStatus = normalizeStatus(art.status);
+      const statusMatch = selectedStatus === 'všechny' || normalizedStatus === selectedStatus;
+      const searchMatch = art.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         art.description.toLowerCase().includes(searchTerm.toLowerCase());
+      return statusMatch && searchMatch;
+    });
+  }, [visibleArtworks, selectedStatus, searchTerm]);
+
   if (loading) return <div className="gallery-loading">{t('common.loading')}</div>;
   if (error) return <div className="gallery-error">{t('common.error')}: {error}</div>;
 
@@ -272,39 +293,39 @@ const ArtworkList: React.FC = () => {
               className={`filter-btn ${selectedStatus === 'všechny' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('všechny')}
             >
-              {t('gallery.all')} ({visibleArtworks.length})
+              {t('gallery.all')} ({statusCountBase.length})
             </button>
             {canSeeHiddenArtworks() && (
               <button
                 className={`filter-btn ${selectedStatus === 'skryto' ? 'active' : ''}`}
                 onClick={() => setSelectedStatus('skryto')}
               >
-                {t('gallery.statusHidden')} ({visibleArtworks.filter(a => normalizeStatus(a.status) === 'skryto').length})
+                {t('gallery.statusHidden')} ({statusCountBase.filter(a => normalizeStatus(a.status) === 'skryto').length})
               </button>
             )}
             <button
               className={`filter-btn ${selectedStatus === 'vystaveno' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('vystaveno')}
             >
-              {t('gallery.statusExhibited')} ({visibleArtworks.filter(a => normalizeStatus(a.status) === 'vystaveno').length})
+              {t('gallery.statusExhibited')} ({statusCountBase.filter(a => normalizeStatus(a.status) === 'vystaveno').length})
             </button>
             <button
               className={`filter-btn ${selectedStatus === 'k prodeji' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('k prodeji')}
             >
-              {t('gallery.statusForSale')} ({visibleArtworks.filter(a => normalizeStatus(a.status) === 'k prodeji').length})
+              {t('gallery.statusForSale')} ({statusCountBase.filter(a => normalizeStatus(a.status) === 'k prodeji').length})
             </button>
             <button
               className={`filter-btn ${selectedStatus === 'rezervováno' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('rezervováno')}
             >
-              {t('gallery.statusReserved')} ({visibleArtworks.filter(a => normalizeStatus(a.status) === 'rezervováno').length})
+              {t('gallery.statusReserved')} ({statusCountBase.filter(a => normalizeStatus(a.status) === 'rezervováno').length})
             </button>
             <button
               className={`filter-btn ${selectedStatus === 'zrušeno' ? 'active' : ''}`}
               onClick={() => setSelectedStatus('zrušeno')}
             >
-              {t('gallery.statusCancelled')} ({visibleArtworks.filter(a => normalizeStatus(a.status) === 'zrušeno').length})
+              {t('gallery.statusCancelled')} ({statusCountBase.filter(a => normalizeStatus(a.status) === 'zrušeno').length})
             </button>
           </div>
 
@@ -334,7 +355,7 @@ const ArtworkList: React.FC = () => {
               className={`filter-btn ${selectedArtworkType === 'všechny' ? 'active' : ''}`}
               onClick={() => setSelectedArtworkType('všechny')}
             >
-              {t('gallery.all')} ({visibleArtworks.length})
+              {t('gallery.all')} ({typeCountBase.length})
             </button>
             {artworkTypes.map(type => (
               <button
@@ -342,7 +363,7 @@ const ArtworkList: React.FC = () => {
                 className={`filter-btn ${selectedArtworkType === type.id ? 'active' : ''}`}
                 onClick={() => setSelectedArtworkType(type.id)}
               >
-                {getTypeLabel(type)} ({visibleArtworks.filter(a => a.artworkTypeId === type.id).length})
+                {getTypeLabel(type)} ({typeCountBase.filter(a => a.artworkTypeId === type.id).length})
               </button>
             ))}
           </div>

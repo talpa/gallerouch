@@ -221,6 +221,10 @@
 
 @media (max-width: 768px) {
   .public-header {
+    padding: 1rem;
+  }
+
+  .public-header {
     flex-direction: column;
     gap: 1rem;
   }
@@ -236,13 +240,89 @@
   }
 
   .main-nav {
+    width: 100%;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .main-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.4rem 0.7rem;
+    border-radius: 0.4rem;
+    background: #f5f7f8;
   }
 
   .user-menu {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .menu-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .public-main {
+    padding: 1rem;
+  }
+
+  .public-header h1 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+
+  .main-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .main-nav a,
+  .menu-btn,
+  .language-toggle {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .user-menu-authenticated,
+  .user-menu-anonymous {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .user-greeting {
+    text-align: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .public-header {
+    padding: 0.75rem;
+  }
+
+  .public-header h1 {
+    font-size: 1.15rem;
+  }
+
+  .main-nav a,
+  .menu-btn,
+  .language-toggle {
+    font-size: 0.85rem;
+    min-height: 42px;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .public-main {
+    padding: 0.75rem;
   }
 }

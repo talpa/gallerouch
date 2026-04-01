@@ -144,6 +144,43 @@
 }
 
 @media (max-width: 768px) {
+  .admin-gallery-manager {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .gallery-controls {
+    align-items: stretch;
+  }
+
+  .gallery-controls .btn,
+  .user-filter-dropdown {
+    width: 100%;
+  }
+
+  .user-artwork-manager .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-artwork-manager .filter-group .filter-label {
+    white-space: normal;
+  }
+
+  .artwork-table {
+    font-size: 0.85rem;
+  }
+
+  .gallery-action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gallery-action-buttons button,
+  .artwork-card-actions button {
+    width: 100%;
+  }
+
   .artwork-cards-container {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
@@ -257,4 +294,21 @@
 .modal-header .btn-close:hover {
   background-color: #a8d5ba;
   opacity: 1;
+}
+
+@media (max-width: 360px) {
+  .admin-gallery-manager {
+    padding: 0.75rem;
+    margin: 0.5rem;
+  }
+
+  .artwork-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .artwork-card-actions button,
+  .gallery-action-buttons button,
+  .user-filter-dropdown {
+    font-size: 0.78rem;
+  }
 }

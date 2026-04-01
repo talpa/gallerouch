@@ -131,7 +131,7 @@ const UserPaymentsManager: React.FC = () => {
 
   return (
     <Container className="user-payments-manager mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="payments-header d-flex justify-content-between align-items-center mb-4">
         <h2>{t('payments.myPayments') || 'Moje platby'}</h2>
         <Button variant="primary" onClick={loadPayments} size="sm">
           🔄 {t('buttons.refresh') || 'Obnovit'}
@@ -163,7 +163,7 @@ const UserPaymentsManager: React.FC = () => {
             variant={filter === 'all' ? 'primary' : 'outline-primary'}
             size="sm"
             onClick={() => setFilter('all')}
-            className="me-2"
+            className="payments-filter-btn me-2"
           >
             Všechny ({payments.length})
           </Button>
@@ -171,7 +171,7 @@ const UserPaymentsManager: React.FC = () => {
             variant={filter === 'paid' ? 'success' : 'outline-success'}
             size="sm"
             onClick={() => setFilter('paid')}
-            className="me-2"
+            className="payments-filter-btn me-2"
           >
             ✓ Zaplacené ({paidCount})
           </Button>
@@ -179,6 +179,7 @@ const UserPaymentsManager: React.FC = () => {
             variant={filter === 'unpaid' ? 'warning' : 'outline-warning'}
             size="sm"
             onClick={() => setFilter('unpaid')}
+            className="payments-filter-btn"
           >
             ⏱ Čekající ({unpaidCount})
           </Button>

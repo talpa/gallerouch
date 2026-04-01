@@ -104,3 +104,70 @@
   padding: 0.35rem 0.65rem;
   border-radius: 0.25rem;
 }
+
+@media (max-width: 768px) {
+  .admin-approvals-manager {
+    padding: 1rem;
+  }
+
+  .approvals-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .approvals-filter .btn {
+    width: 100%;
+  }
+
+  .approvals-table {
+    font-size: 0.85rem;
+  }
+
+  .approvals-table td {
+    padding: 0.5rem;
+  }
+
+  .btn-group.btn-group-sm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-group.btn-group-sm .btn {
+    width: 100%;
+  }
+
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-approvals-manager {
+    padding: 0.75rem;
+  }
+
+  .admin-approvals-manager h2 {
+    font-size: 1.2rem;
+  }
+
+  .approvals-filter .btn,
+  .btn-group.btn-group-sm .btn {
+    font-size: 0.78rem;
+  }
+
+  .approvals-table {
+    font-size: 0.8rem;
+  }
+}

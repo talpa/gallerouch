@@ -61,6 +61,14 @@
   flex-wrap: wrap;
 }
 
+.payments-header {
+  gap: 0.75rem;
+}
+
+.payments-filter-btn {
+  white-space: normal;
+}
+
 /* Artwork link */
 .artwork-link {
   background: none;
@@ -116,6 +124,26 @@
 }
 
 @media (max-width: 768px) {
+  .payments-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .payments-header .btn {
+    width: 100%;
+  }
+
+  .payments-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .payments-filter-btn {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+
   .payments-summary {
     grid-template-columns: 1fr;
   }
@@ -135,5 +163,29 @@
   .payments-table th,
   .payments-table td {
     padding: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .user-payments-manager {
+    padding: 12px 0;
+  }
+
+  .payments-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .payments-filter-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .payments-table {
+    font-size: 0.78rem;
+  }
+
+  .payments-table th,
+  .payments-table td {
+    padding: 8px;
   }
 }
