@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAppSelector } from '../hooks';
+import { useTranslation } from 'react-i18next';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
@@ -18,8 +19,11 @@ interface ArtworkType {
 
 const AuthorBioEditor: React.FC = () => {
   const { token, user } = useAppSelector(state => state.auth);
+  const { t } = useTranslation();
   const [bio, setBio] = useState('');
   const [bioApproved, setBioApproved] = useState(false);
+  const [bioEn, setBioEn] = useState('');
+  const [bioEnApproved, setBioEnApproved] = useState(false);
   const [availableTypes, setAvailableTypes] = useState<ArtworkType[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<number[]>([]);
   const [userTypes, setUserTypes] = useState<ArtworkType[]>([]);
@@ -34,6 +38,8 @@ const AuthorBioEditor: React.FC = () => {
       });
       setBio(res.data.bio || '');
       setBioApproved(res.data.bio_approved || false);
+      setBioEn(res.data.bio_en || '');
+      setBioEnApproved(res.data.bio_en_approved || false);
       const artworkTypes = res.data.artworkTypes || [];
       setUserTypes(artworkTypes);
       
@@ -91,13 +97,15 @@ const AuthorBioEditor: React.FC = () => {
     try {
       const response = await axios.put('/api/auth/profile/author', {
         bio,
+        bioEn,
         artworkTypeIds: selectedTypeIds
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setSuccess('Profil byl odeslán ke schválení adminem');
+      setSuccess(t('authorBio.profileSubmitted'));
       setBioApproved(false); // Profile is now pending
+      setBioEnApproved(false); // Profile is now pending
       setTimeout(() => setSuccess(null), 5000);
       
       // Emit custom event to notify other components about profile update
@@ -106,7 +114,7 @@ const AuthorBioEditor: React.FC = () => {
       loadProfile();
     } catch (err: any) {
       console.error('Profile update error:', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Chyba při ukládání profilu';
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || t('messages.error');
       setError(errorMsg);
       setTimeout(() => setError(null), 5000);
     } finally {
@@ -117,14 +125,14 @@ const AuthorBioEditor: React.FC = () => {
   return (
     <div className="author-bio-editor">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ margin: 0 }}>Autorský profil</h2>
+        <h2 style={{ margin: 0 }}>{t('authorBio.authorProfile')}</h2>
         <Button 
           variant="outline-secondary" 
           size="sm"
           onClick={loadProfile}
-          title="Znovu načíst profil (např. po schválení adminem)"
+          title={t('authorBio.refreshTooltip')}
         >
-          🔄 Obnovit
+          {t('authorBio.refresh')}
         </Button>
       </div>
       
@@ -133,41 +141,63 @@ const AuthorBioEditor: React.FC = () => {
       
       {!bioApproved && bio && (
         <Alert variant="warning">
-          ⏳ Váš profil čeká na schválení adminem
+          {t('authorBio.pendingApproval')}
         </Alert>
       )}
 
       <Form onSubmit={handleSubmit}>
         <Card className="mb-4">
           <Card.Header>
-            <strong>📝 Biografie</strong>
-            {bioApproved && <Badge bg="success" className="ms-2">Schváleno</Badge>}
-            {!bioApproved && bio && <Badge bg="warning" className="ms-2">Čeká na schválení</Badge>}
+            <strong>{t('authorBio.biography')}</strong>
           </Card.Header>
           <Card.Body>
-            <Form.Group>
-              <Form.Label>O vás</Form.Label>
+            {/* Czech Biography */}
+            <Form.Group className="mb-4">
+              <Form.Label>
+                {t('authorBio.biographyCzech')}
+              </Form.Label>
               <Form.Control
                 as="textarea"
                 rows={6}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Napište něco o sobě, své tvorbě, inspiraci..."
+                placeholder={t('authorBio.aboutYouPlaceholder')}
               />
               <Form.Text className="text-muted">
-                Popište sebe a svou tvorbu
+                {t('authorBio.describeYourself')}
               </Form.Text>
+              {bioApproved && <Badge bg="success" className="ms-2 d-inline-block mt-2">{t('authorBio.approved')}</Badge>}
+              {!bioApproved && bio && <Badge bg="warning" className="ms-2 d-inline-block mt-2">{t('authorBio.pending')}</Badge>}
+            </Form.Group>
+
+            {/* English Biography */}
+            <Form.Group>
+              <Form.Label>
+                {t('authorBio.biographyEnglish')}
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={6}
+                value={bioEn}
+                onChange={(e) => setBioEn(e.target.value)}
+                placeholder={t('authorBio.aboutYouPlaceholderEnglish')}
+              />
+              <Form.Text className="text-muted">
+                {t('authorBio.describeYourselfEnglish')}
+              </Form.Text>
+              {bioEnApproved && <Badge bg="success" className="ms-2 d-inline-block mt-2">{t('authorBio.approved')}</Badge>}
+              {!bioEnApproved && bioEn && <Badge bg="warning" className="ms-2 d-inline-block mt-2">{t('authorBio.pending')}</Badge>}
             </Form.Group>
           </Card.Body>
         </Card>
 
         <Card className="mb-4">
           <Card.Header>
-            <strong>🎨 Typy uměleckých děl</strong>
+            <strong>{t('authorBio.artworkTypes')}</strong>
           </Card.Header>
           <Card.Body>
             <Form.Text className="text-muted d-block mb-3">
-              Vyberte typy děl, které tvoříte. Po schválení adminem budete moci vytvářet díla těchto typů.
+              {t('authorBio.selectArtworkTypes')}
             </Form.Text>
             
             <div className="artwork-types-grid">
@@ -200,11 +230,11 @@ const AuthorBioEditor: React.FC = () => {
         </Card>
 
         <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? '⏳ Ukládám...' : '💾 Uložit profil'}
+          {loading ? t('authorBio.saving') : t('authorBio.saveProfileButton')}
         </Button>
         
         <Form.Text className="d-block mt-2 text-muted">
-          Změny profilu musí být schváleny adminem
+          {t('authorBio.changesNeedApproval')}
         </Form.Text>
       </Form>
     </div>

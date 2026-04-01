@@ -965,9 +965,12 @@ router.get('/profile', authenticateToken, async (req, res) => {
   try {
     await client.connect();
     
-    // Get user with bio (approved or pending)
+    // Get user with bio (Czech and English, approved or pending)
     const userResult = await client.query(
-      `SELECT id, username, email, bio, bio_approved, bio_approved_at, created_at 
+      `SELECT id, username, email, 
+              bio, bio_approved, bio_approved_at,
+              bio_en, bio_en_approved, bio_en_approved_at,
+              created_at 
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -1004,22 +1007,44 @@ router.get('/profile', authenticateToken, async (req, res) => {
 // PUT /api/auth/profile/author - Update own author bio and artwork types
 router.put('/profile/author', authenticateToken, async (req, res) => {
   const userId = req.user.id;
-  const { bio, artworkTypeIds } = req.body;
+  const { bio, bioEn, artworkTypeIds } = req.body;
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   
-  console.log(`[PUT /profile/author] userId=${userId}, bio length=${bio ? bio.length : 0}, artworkTypeIds=${JSON.stringify(artworkTypeIds)}`);
+  console.log(`[PUT /profile/author] userId=${userId}, bio length=${bio ? bio.length : 0}, bioEn length=${bioEn ? bioEn.length : 0}, artworkTypeIds=${JSON.stringify(artworkTypeIds)}`);
   
   try {
     await client.connect();
     
-    // Update bio (pending approval)
-    if (bio !== undefined) {
+    // Update bio (Czech and English, both pending approval)
+    if (bio !== undefined || bioEn !== undefined) {
       console.log(`[PUT /profile/author] Updating bio for user ${userId}`);
+      const updates = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (bio !== undefined) {
+        updates.push(`bio = $${paramIndex}`);
+        values.push(bio);
+        paramIndex++;
+        updates.push(`bio_approved = false`);
+        updates.push(`bio_approved_at = NULL`);
+        updates.push(`bio_approved_by = NULL`);
+      }
+      
+      if (bioEn !== undefined) {
+        updates.push(`bio_en = $${paramIndex}`);
+        values.push(bioEn);
+        paramIndex++;
+        updates.push(`bio_en_approved = false`);
+        updates.push(`bio_en_approved_at = NULL`);
+        updates.push(`bio_en_approved_by = NULL`);
+      }
+      
+      values.push(userId);
+      
       await client.query(
-        `UPDATE users 
-         SET bio = $1, bio_approved = false, bio_approved_at = NULL, bio_approved_by = NULL
-         WHERE id = $2`,
-        [bio, userId]
+        `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+        values
       );
       console.log(`[PUT /profile/author] Bio updated successfully`);
     }

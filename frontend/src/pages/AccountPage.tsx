@@ -50,7 +50,7 @@ const AccountPage: React.FC = () => {
             <Tab eventKey="admin-gallery" title={t('account.adminGallery')}>
               <AdminGalleryManager />
             </Tab>
-            <Tab eventKey="admin-artwork-types" title="🎨 Typy uměleckých děl">
+            <Tab eventKey="admin-artwork-types" title={t('account.adminArtworkTypes')}>
               <AdminArtworkTypesManager />
             </Tab>
             <Tab eventKey="profile" title={t('account.profileAndBanking')}>
@@ -74,7 +74,7 @@ const AccountPage: React.FC = () => {
             <Tab eventKey="admin-profile-approvals" title={t('account.adminProfileApprovals')}>
               <AdminProfileApprovals />
             </Tab>
-            <Tab eventKey="admin-author-approvals" title="👨‍🎨 Schválení bio & typů">
+            <Tab eventKey="admin-author-approvals" title={t('account.adminAuthorApprovals')}>
               <AdminAuthorApprovals />
             </Tab>
             <Tab eventKey="settings" title={t('account.adminSettings')}>
@@ -102,7 +102,7 @@ const AccountPage: React.FC = () => {
           <Tab eventKey="artworks" title={t('account.myArtworks')}>
             <UserArtworkManager />
           </Tab>
-          <Tab eventKey="author-bio" title="👨‍🎨 Autorský profil">
+          <Tab eventKey="author-bio" title={t('account.authorProfile')}>
             <AuthorBioEditor />
           </Tab>
           <Tab eventKey="profile" title={t('account.profileAndBanking')}>
