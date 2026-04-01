@@ -13,7 +13,7 @@ class FioApi {
       ? token.trim().replace(/^['\"]|['\"]$/g, '')
       : token;
     this.accountNumber = accountNumber; // e.g., "2400078999/2010"
-    this.baseUrl = 'https://www.fio.cz/iss/api/rest';
+    this.baseUrl = process.env.FIO_API_BASE_URL || 'https://www.fio.cz/ib_api/rest';
   }
 
   /**

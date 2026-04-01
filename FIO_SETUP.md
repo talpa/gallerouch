@@ -40,6 +40,8 @@ V souboru `backend/.env` přidejte:
 # Fio Bank API
 FIO_API_TOKEN=your-token-here
 FIO_ACCOUNT_NUMBER=1234567890/2010
+# Volitelné přepsání API URL (default: https://www.fio.cz/ib_api/rest)
+# FIO_API_BASE_URL=https://www.fio.cz/ib_api/rest
 ```
 
 Příklady tokenů:
