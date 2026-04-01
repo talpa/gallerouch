@@ -45,7 +45,7 @@ type ArtworkStatus = 'skryto' | 'vystaveno' | 'k_prodeji' | 'rezervováno' | 'zr
 type ViewMode = 'card' | 'list';
 
 const UserGalleryBrowser: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const isAdmin = user?.role === 'admin';
@@ -123,6 +123,16 @@ const UserGalleryBrowser: React.FC = () => {
       'zrušeno': t('gallery.statusCancelled'),
     };
     return statusMap[normalizedStatus] || status;
+  };
+
+  const getTypeLabel = (type: { name: string; name_en?: string }): string => {
+    return i18n.language.startsWith('en') ? (type.name_en || type.name) : type.name;
+  };
+
+  const getArtworkTypeLabel = (art: Artwork): string | undefined => {
+    return i18n.language.startsWith('en')
+      ? (art.artworkTypeNameEn || art.artworkTypeName)
+      : art.artworkTypeName;
   };
 
   const normalizeStatus = (status: string): string => {
@@ -326,9 +336,9 @@ const UserGalleryBrowser: React.FC = () => {
                     </div>
                     <div className="card-content">
                       <h3 className="card-title">{art.title}</h3>
-                      {art.artworkTypeName && (
+                        {getArtworkTypeLabel(art) && (
                         <div className="mb-2">
-                          <span className="badge bg-secondary">{art.artworkTypeName}</span>
+                            <span className="badge bg-secondary">{getArtworkTypeLabel(art)}</span>
                         </div>
                       )}
                       <p className="card-description">{art.description}</p>
@@ -366,8 +376,8 @@ const UserGalleryBrowser: React.FC = () => {
                     <img src={art.imageUrl} alt={art.title} className="row-image" />
                     <div className="row-content">
                       <h4>{art.title}</h4>
-                      {art.artworkTypeName && (
-                        <span className="badge bg-secondary me-2">{art.artworkTypeName}</span>
+                      {getArtworkTypeLabel(art) && (
+                        <span className="badge bg-secondary me-2">{getArtworkTypeLabel(art)}</span>
                       )}
                       <p className="row-description">{art.description}</p>
                     </div>
@@ -429,7 +439,7 @@ const UserGalleryBrowser: React.FC = () => {
                     >
                       <option value="0">{t('gallery.selectType')}</option>
                       {allArtworkTypes.map(type => (
-                        <option key={type.id} value={type.id}>{type.name}</option>
+                        <option key={type.id} value={type.id}>{getTypeLabel(type)}</option>
                       ))}
                     </Form.Select>
                   </Form.Group>

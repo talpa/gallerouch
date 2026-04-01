@@ -46,7 +46,7 @@ interface FilteredArtworkListProps {
 }
 
 const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const token = useSelector((state: RootState) => state.auth.token);
@@ -81,6 +81,16 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
       'zrušeno': t('gallery.statusCancelled'),
     };
     return statusMap[normalizedStatus] || status;
+  };
+
+  const getTypeLabel = (type: { name: string; name_en?: string }): string => {
+    return i18n.language.startsWith('en') ? (type.name_en || type.name) : type.name;
+  };
+
+  const getArtworkTypeLabel = (art: Artwork): string | undefined => {
+    return i18n.language.startsWith('en')
+      ? (art.artworkTypeNameEn || art.artworkTypeName)
+      : art.artworkTypeName;
   };
 
   // Helper pro normalizaci statusu z backendu
@@ -234,7 +244,7 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
                 className={`type-chip ${selectedTypeIds.includes(type.id) ? 'selected' : ''}`}
                 onClick={() => toggleTypeSelection(type.id)}
               >
-                {type.name} <span className="type-count">({type.count})</span>
+                {getTypeLabel(type)} <span className="type-count">({type.count})</span>
               </button>
             ))}
           </div>
@@ -306,9 +316,9 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
                   </div>
                   <div className="card-content">
                     <h3 className="card-title">{art.title}</h3>
-                    {art.artworkTypeName && (
+                    {getArtworkTypeLabel(art) && (
                       <div className="mb-2">
-                        <span className="badge bg-secondary">{art.artworkTypeName}</span>
+                        <span className="badge bg-secondary">{getArtworkTypeLabel(art)}</span>
                       </div>
                     )}
                     {art.userBio && (
@@ -371,8 +381,8 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
                   </div>
                   <div className="row-content">
                     <h4 className="row-title">{art.title}</h4>
-                    {art.artworkTypeName && (
-                      <span className="badge bg-secondary me-2">{art.artworkTypeName}</span>
+                    {getArtworkTypeLabel(art) && (
+                      <span className="badge bg-secondary me-2">{getArtworkTypeLabel(art)}</span>
                     )}
                     {art.userBio && (
                       <p className="row-bio">
@@ -464,7 +474,7 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
                       <option value="0">{t('gallery.selectType')}</option>
                       {allArtworkTypes.map(type => (
                         <option key={type.id} value={type.id}>
-                          {type.name}
+                          {getTypeLabel(type)}
                         </option>
                       ))}
                     </Form.Select>

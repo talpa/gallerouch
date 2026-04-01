@@ -19,7 +19,7 @@ interface ArtworkType {
 
 const AuthorBioEditor: React.FC = () => {
   const { token, user } = useAppSelector(state => state.auth);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [bio, setBio] = useState('');
   const [bioApproved, setBioApproved] = useState(false);
   const [bioEn, setBioEn] = useState('');
@@ -206,6 +206,10 @@ const AuthorBioEditor: React.FC = () => {
                 const userType = userTypes.find(ut => ut.id === type.id);
                 const isApproved = userType?.approved;
 
+                const displayTypeName = i18n.language.startsWith('en')
+                  ? (type.name_en || type.name)
+                  : type.name;
+
                 return (
                   <div 
                     key={type.id}
@@ -215,7 +219,7 @@ const AuthorBioEditor: React.FC = () => {
                     <Form.Check
                       type="checkbox"
                       id={`type-${type.id}`}
-                      label={type.name}
+                      label={displayTypeName}
                       checked={isSelected}
                       onChange={() => {}}
                       className="artwork-type-checkbox"

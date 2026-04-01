@@ -38,7 +38,7 @@ interface Artwork {
 
 const AdminGalleryManager: React.FC = () => {
   const { token, user } = useAppSelector(state => state.auth);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
@@ -110,6 +110,16 @@ const AdminGalleryManager: React.FC = () => {
       'zrušeno': t('gallery.cancelled') || 'Zrušeno',
     };
     return statusMap[status] || status;
+  };
+
+  const getTypeLabel = (type: { name: string; name_en?: string }): string => {
+    return i18n.language.startsWith('en') ? (type.name_en || type.name) : type.name;
+  };
+
+  const getArtworkTypeLabel = (art: Artwork): string | undefined => {
+    return i18n.language.startsWith('en')
+      ? (art.artworkTypeNameEn || art.artworkTypeName)
+      : art.artworkTypeName;
   };
 
   // Filtrování bez useMemo - přímé vyhodnocení při každém renderu
@@ -351,8 +361,8 @@ const AdminGalleryManager: React.FC = () => {
                   <td>{art.id}</td>
                   <td>{art.title}</td>
                   <td>
-                    {art.artworkTypeName ? (
-                      <Badge bg="secondary">{art.artworkTypeName}</Badge>
+                    {getArtworkTypeLabel(art) ? (
+                      <Badge bg="secondary">{getArtworkTypeLabel(art)}</Badge>
                     ) : (
                       <span className="text-muted">—</span>
                     )}
@@ -476,7 +486,7 @@ const AdminGalleryManager: React.FC = () => {
                      <option value="0">-- {t('gallery.selectType') || 'Vyberte typ'} --</option>
                     {artworkTypes.map(type => (
                        <option key={type.id} value={type.id.toString()}>
-                        {type.name}
+                        {getTypeLabel(type)}
                       </option>
                     ))}
                   </Form.Select>

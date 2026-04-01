@@ -58,7 +58,7 @@ interface UserFilteredArtworkListProps {
 }
 
 const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userId, filterType }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const token = useSelector((state: RootState) => state.auth.token);
@@ -99,6 +99,16 @@ const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userI
       'zrušeno': t('gallery.statusCancelled'),
     };
     return statusMap[normalizedStatus] || status;
+  };
+
+  const getTypeLabel = (type: { name: string; name_en?: string }): string => {
+    return i18n.language.startsWith('en') ? (type.name_en || type.name) : type.name;
+  };
+
+  const getArtworkTypeLabel = (art: Artwork): string | undefined => {
+    return i18n.language.startsWith('en')
+      ? (art.artworkTypeNameEn || art.artworkTypeName)
+      : art.artworkTypeName;
   };
 
   // Helper pro bezpečné parsování data
@@ -320,7 +330,7 @@ const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userI
                           fontWeight: '500'
                         }}
                       >
-                        {type.name}
+                        {getTypeLabel(type)}
                       </span>
                     ))}
                   </div>
@@ -430,9 +440,9 @@ const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userI
                   </div>
                   <div className="card-content">
                     <h3 className="card-title">{art.title}</h3>
-                    {art.artworkTypeName && (
+                    {getArtworkTypeLabel(art) && (
                       <div className="mb-2">
-                        <span className="badge bg-secondary">{art.artworkTypeName}</span>
+                        <span className="badge bg-secondary">{getArtworkTypeLabel(art)}</span>
                       </div>
                     )}
                     {art.userBio && (
@@ -495,8 +505,8 @@ const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userI
                   </div>
                   <div className="row-content">
                     <h4 className="row-title">{art.title}</h4>
-                    {art.artworkTypeName && (
-                      <span className="badge bg-secondary me-2">{art.artworkTypeName}</span>
+                    {getArtworkTypeLabel(art) && (
+                      <span className="badge bg-secondary me-2">{getArtworkTypeLabel(art)}</span>
                     )}
                     <p className="row-description">{art.description}</p>
                     {art.userEmail && filterType === 'author' && (
@@ -583,7 +593,7 @@ const UserFilteredArtworkList: React.FC<UserFilteredArtworkListProps> = ({ userI
                       <option value="0">{t('gallery.selectType')}</option>
                       {allArtworkTypes.map(type => (
                         <option key={type.id} value={type.id}>
-                          {type.name}
+                          {getTypeLabel(type)}
                         </option>
                       ))}
                     </Form.Select>

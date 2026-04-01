@@ -38,7 +38,7 @@ export interface Artwork {
 }
 
 const ArtworkList: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const isAdmin = user?.role === 'admin';
@@ -73,6 +73,16 @@ const ArtworkList: React.FC = () => {
       'zrušeno': t('gallery.statusCancelled'),
     };
     return statusMap[status] || status;
+  };
+
+  const getTypeLabel = (type: { name: string; name_en?: string }): string => {
+    return i18n.language.startsWith('en') ? (type.name_en || type.name) : type.name;
+  };
+
+  const getArtworkTypeLabel = (art: Artwork): string | undefined => {
+    return i18n.language.startsWith('en')
+      ? (art.artworkTypeNameEn || art.artworkTypeName)
+      : art.artworkTypeName;
   };
 
   // Helper pro normalizaci statusu z backendu (lowercase s podtržítky) na frontend formát
@@ -332,7 +342,7 @@ const ArtworkList: React.FC = () => {
                 className={`filter-btn ${selectedArtworkType === type.id ? 'active' : ''}`}
                 onClick={() => setSelectedArtworkType(type.id)}
               >
-                {type.name} ({visibleArtworks.filter(a => a.artworkTypeId === type.id).length})
+                {getTypeLabel(type)} ({visibleArtworks.filter(a => a.artworkTypeId === type.id).length})
               </button>
             ))}
           </div>
@@ -369,9 +379,9 @@ const ArtworkList: React.FC = () => {
                 </div>
                 <div className="card-content">
                   <h3 className="card-title">{art.title}</h3>
-                  {art.artworkTypeName && (
+                  {getArtworkTypeLabel(art) && (
                     <div className="mb-2">
-                      <span className="badge bg-secondary">{art.artworkTypeName}</span>
+                      <span className="badge bg-secondary">{getArtworkTypeLabel(art)}</span>
                     </div>
                   )}
                   {art.userBio && (
@@ -460,9 +470,9 @@ const ArtworkList: React.FC = () => {
                 </div>
                 <div className="row-content">
                   <h4 className="row-title">{art.title}</h4>
-                  {art.artworkTypeName && (
+                  {getArtworkTypeLabel(art) && (
                     <div className="mb-2">
-                      <span className="badge bg-secondary">{art.artworkTypeName}</span>
+                      <span className="badge bg-secondary">{getArtworkTypeLabel(art)}</span>
                     </div>
                   )}
                   {art.userBio && (
@@ -578,7 +588,7 @@ const ArtworkList: React.FC = () => {
                       <option value="0">-- {t('gallery.selectType')} --</option>
                       {artworkTypes.map(type => (
                         <option key={type.id} value={type.id.toString()}>
-                          {type.name}
+                          {getTypeLabel(type)}
                         </option>
                       ))}
                     </Form.Select>
