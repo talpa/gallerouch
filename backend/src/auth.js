@@ -324,7 +324,10 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
     await client.connect();
     const result = await client.query(
       `SELECT id, username, email, role, created_at, 
-              profile_approved, profile_approved_at, profile_approved_by
+              profile_approved, profile_approved_at, profile_approved_by,
+              birth_number, permanent_address, permanent_city, permanent_postal_code, country,
+              address, city, postal_code, bank_account_number, bank_code, bank_name,
+              bio, bio_en
        FROM users ORDER BY created_at DESC`
     );
     await client.end();

@@ -21,6 +21,8 @@ interface UserProfileData {
   bank_account_number?: string;
   bank_code?: string;
   bank_name?: string;
+  bio?: string;
+  bio_en?: string;
   profile_approved?: boolean;
   profile_approved_at?: string;
   profile_approved_by?: number;
@@ -212,6 +214,27 @@ const AdminProfileApprovals: React.FC = () => {
                 </p>
                 {selectedUser.profile_approved_at && (
                   <p><strong>{t('profile.approvedDate')}:</strong> {new Date(selectedUser.profile_approved_at).toLocaleDateString('cs-CZ')}</p>
+                )}
+              </div>
+
+              <div className="profile-section">
+                <h4>{t('profile.bio') || 'Biografie'}</h4>
+                {selectedUser.bio && (
+                  <p>
+                    <strong>Česky:</strong>
+                    <br />
+                    {selectedUser.bio}
+                  </p>
+                )}
+                {selectedUser.bio_en && (
+                  <p>
+                    <strong>English:</strong>
+                    <br />
+                    {selectedUser.bio_en}
+                  </p>
+                )}
+                {!selectedUser.bio && !selectedUser.bio_en && (
+                  <p><em>{t('profile.notFilled')}</em></p>
                 )}
               </div>
 
