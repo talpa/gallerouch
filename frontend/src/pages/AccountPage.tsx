@@ -115,19 +115,10 @@ const AccountPage: React.FC = () => {
             <UserArtworkManager />
           </Tab>
           <Tab eventKey="profile" title={`👤 ${t('account.profileAndBanking')}`}>
-            <div className="alert alert-info mt-3" role="alert">
-              Tato stránka je rozdělena na dvě části: osobní profil a autorský profil.
-              Každá část se schvaluje samostatně.
-            </div>
-            <h4 className="mt-3">👤 {t('account.profileAndBanking')}</h4>
             <UserProfileManager />
-            <div className="mt-4">
-              <h4 className="mb-3">🎨 {t('account.authorProfile')}</h4>
-              <p className="text-muted mb-3">
-                Biografie a typy děl se schvalují jako autorský profil.
-              </p>
-              <AuthorBioEditor />
-            </div>
+          </Tab>
+          <Tab eventKey="author-bio" title={`🎨 ${t('account.authorProfile')}`}>
+            <AuthorBioEditor />
           </Tab>
           <Tab eventKey="events" title={t('account.myEvents')}>
             <div className="mt-3">
