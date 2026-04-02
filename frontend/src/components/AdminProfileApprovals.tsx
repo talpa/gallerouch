@@ -175,18 +175,18 @@ const AdminProfileApprovals: React.FC = () => {
                     {!user.profileApproved && (
                       <>
                         <button
-                          className="btn btn-sm btn-success"
+                          className="btn btn-sm btn-outline-success"
                           style={{ minWidth: '65px', fontSize: '0.8rem', padding: '0.2rem 0.4rem' }}
                           onClick={() => handleApprove(user.id)}
                         >
-                          ✓
+                          {t('common.approve')}
                         </button>
                         <button
-                          className="btn btn-sm btn-danger"
+                          className="btn btn-sm btn-outline-danger"
                           style={{ minWidth: '65px', fontSize: '0.8rem', padding: '0.2rem 0.4rem' }}
                           onClick={() => handleReject(user.id)}
                         >
-                          ✗
+                          {t('common.reject')}
                         </button>
                       </>
                     )}
@@ -204,7 +204,7 @@ const AdminProfileApprovals: React.FC = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{t('profile.profileDetails')}: {selectedUser.username}</h3>
-              <button className="btn-close" onClick={() => setSelectedUser(null)}>×</button>
+              <button className="btn-close" onClick={() => setSelectedUser(null)} aria-label={t('common.close')}>×</button>
             </div>
             <div className="modal-body">
               <div className="profile-section">
@@ -277,20 +277,20 @@ const AdminProfileApprovals: React.FC = () => {
                 {!selectedUser.profileApproved && (
                   <>
                     <button
-                      className="btn btn-success me-2"
+                      className="btn btn-outline-success me-2"
                       onClick={() => handleApprove(selectedUser.id)}
                     >
                       {t('profile.approveProfileButton')}
                     </button>
                     <button
-                      className="btn btn-danger me-2"
+                      className="btn btn-outline-danger me-2"
                       onClick={() => handleReject(selectedUser.id)}
                     >
                       {t('profile.rejectProfileButton')}
                     </button>
                   </>
                 )}
-                <button className="btn btn-secondary" onClick={() => setSelectedUser(null)}>
+                <button className="btn btn-outline-secondary" onClick={() => setSelectedUser(null)}>
                   {t('common.close')}
                 </button>
               </div>

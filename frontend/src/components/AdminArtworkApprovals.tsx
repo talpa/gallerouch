@@ -338,7 +338,7 @@ const AdminArtworkApprovals: React.FC = () => {
                                     {event.status === 'pending' && (
                                       <div className="artwork-action-buttons">
                                         <Button
-                                          variant="success"
+                                          variant="outline-success"
                                           size="sm"
                                           onClick={() => openModal(event.id, 'approve')}
                                           className="me-1"
@@ -346,7 +346,7 @@ const AdminArtworkApprovals: React.FC = () => {
                                           {t('artworkApprovals.approveButton')}
                                         </Button>
                                         <Button
-                                          variant="danger"
+                                          variant="outline-danger"
                                           size="sm"
                                           onClick={() => openModal(event.id, 'reject')}
                                         >
@@ -398,11 +398,11 @@ const AdminArtworkApprovals: React.FC = () => {
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>
+          <Button variant="outline-secondary" onClick={closeModal}>
             {t('artworkApprovals.cancelButton')}
           </Button>
           <Button
-            variant={modal.action === 'approve' ? 'success' : 'danger'}
+            variant={modal.action === 'approve' ? 'outline-success' : 'outline-danger'}
             onClick={handleModalSubmit}
           >
             {modal.action === 'approve' ? t('artworkApprovals.approveButton') : t('artworkApprovals.rejectButton')}

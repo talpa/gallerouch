@@ -296,20 +296,20 @@ const AdminApprovalsManager: React.FC = () => {
                     {event.status === 'pending' && (
                       <div className="btn-group btn-group-sm">
                         <Button
-                          variant="success"
+                          variant="outline-success"
                           size="sm"
                           onClick={() => openApprovalModal(event.id, 'approve')}
                           title={t('events.approve')}
                         >
-                          ✓
+                          {t('events.approve')}
                         </Button>
                         <Button
-                          variant="danger"
+                          variant="outline-danger"
                           size="sm"
                           onClick={() => openApprovalModal(event.id, 'reject')}
                           title={t('events.reject')}
                         >
-                          ✗
+                          {t('events.reject')}
                         </Button>
                       </div>
                     )}
@@ -352,11 +352,11 @@ const AdminApprovalsManager: React.FC = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>
+          <Button variant="outline-secondary" onClick={closeModal}>
             {t('buttons.cancel')}
           </Button>
           <Button
-            variant={modal.action === 'approve' ? 'success' : 'danger'}
+            variant={modal.action === 'approve' ? 'outline-success' : 'outline-danger'}
             onClick={handleModalSubmit}
           >
             {modal.action === 'approve' ? t('events.approve') : t('events.reject')}

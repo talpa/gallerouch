@@ -260,7 +260,7 @@ const AdminAuthorApprovals: React.FC = () => {
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="success" 
+                        variant="outline-success" 
                         className="me-2"
                         onClick={() => handleApproveBio(user.id)}
                       >
@@ -268,7 +268,7 @@ const AdminAuthorApprovals: React.FC = () => {
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="danger"
+                        variant="outline-danger"
                         onClick={() => handleRejectBio(user.id)}
                       >
                         {t('common.reject')}
@@ -311,7 +311,7 @@ const AdminAuthorApprovals: React.FC = () => {
                     <td>
                       <Button 
                         size="sm" 
-                        variant="success" 
+                        variant="outline-success" 
                         className="me-2"
                         onClick={() => handleApproveArtworkType(item.user_id, item.artwork_type_id)}
                       >
@@ -319,7 +319,7 @@ const AdminAuthorApprovals: React.FC = () => {
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="danger"
+                        variant="outline-danger"
                         onClick={() => handleRejectArtworkType(item.user_id, item.artwork_type_id)}
                       >
                         {t('common.reject')}
@@ -359,15 +359,15 @@ const AdminAuthorApprovals: React.FC = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowBioModal(false)}>
+          <Button variant="outline-secondary" onClick={() => setShowBioModal(false)}>
             {t('common.close')}
           </Button>
           {selectedBio && (
             <>
-              <Button variant="success" onClick={() => handleApproveBio(selectedBio.id)}>
+              <Button variant="outline-success" onClick={() => handleApproveBio(selectedBio.id)}>
                 {t('common.approve')}
               </Button>
-              <Button variant="danger" onClick={() => handleRejectBio(selectedBio.id)}>
+              <Button variant="outline-danger" onClick={() => handleRejectBio(selectedBio.id)}>
                 {t('common.reject')}
               </Button>
             </>
