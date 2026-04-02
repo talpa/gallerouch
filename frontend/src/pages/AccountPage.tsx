@@ -53,20 +53,14 @@ const AccountPage: React.FC = () => {
             <Tab eventKey="admin-artwork-types" title={t('account.adminArtworkTypes')}>
               <AdminArtworkTypesManager />
             </Tab>
-            <Tab eventKey="profile" title={`👤 ${t('account.profileAndBanking')}`}>
-              <div className="alert alert-info mt-3" role="alert">
-                Tato stránka je rozdělena na dvě části: osobní profil a autorský profil.
-                Každá část se schvaluje samostatně.
-              </div>
-              <h4 className="mt-3">👤 {t('account.profileAndBanking')}</h4>
+            <Tab eventKey="profile" title={t('account.profileAndBanking')}>
               <UserProfileManager />
-              <div className="mt-4">
-                <h4 className="mb-3">🎨 {t('account.authorProfile')}</h4>
-                <p className="text-muted mb-3">
-                  Biografie a typy děl se schvalují jako autorský profil.
-                </p>
-                <AuthorBioEditor />
-              </div>
+            </Tab>
+            <Tab eventKey="author-bio" title={t('authorBio.biography')}>
+              <AuthorBioEditor mode="bio" />
+            </Tab>
+            <Tab eventKey="author-types" title={t('authorBio.artworkTypes')}>
+              <AuthorBioEditor mode="types" />
             </Tab>
             <Tab eventKey="events" title={t('account.myEvents')}>
               <div className="mt-3">
@@ -83,10 +77,10 @@ const AccountPage: React.FC = () => {
             <Tab eventKey="admin-artwork-approvals" title={t('account.adminArtworkApprovals')}>
               <AdminArtworkApprovals />
             </Tab>
-            <Tab eventKey="admin-profile-approvals" title={`👤 ${t('account.adminProfileApprovals')}`}>
+            <Tab eventKey="admin-profile-approvals" title={t('account.adminProfileApprovals')}>
               <AdminProfileApprovals />
             </Tab>
-            <Tab eventKey="admin-author-approvals" title={`🎨 ${t('account.adminAuthorApprovals')}`}>
+            <Tab eventKey="admin-author-approvals" title={t('account.adminAuthorApprovals')}>
               <AdminAuthorApprovals />
             </Tab>
             <Tab eventKey="settings" title={t('account.adminSettings')}>
@@ -114,11 +108,14 @@ const AccountPage: React.FC = () => {
           <Tab eventKey="artworks" title={t('account.myArtworks')}>
             <UserArtworkManager />
           </Tab>
-          <Tab eventKey="profile" title={`👤 ${t('account.profileAndBanking')}`}>
+          <Tab eventKey="profile" title={t('account.profileAndBanking')}>
             <UserProfileManager />
           </Tab>
-          <Tab eventKey="author-bio" title={`🎨 ${t('account.authorProfile')}`}>
-            <AuthorBioEditor />
+          <Tab eventKey="author-bio" title={t('authorBio.biography')}>
+            <AuthorBioEditor mode="bio" />
+          </Tab>
+          <Tab eventKey="author-types" title={t('authorBio.artworkTypes')}>
+            <AuthorBioEditor mode="types" />
           </Tab>
           <Tab eventKey="events" title={t('account.myEvents')}>
             <div className="mt-3">

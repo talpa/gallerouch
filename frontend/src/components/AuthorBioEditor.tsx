@@ -17,9 +17,15 @@ interface ArtworkType {
   approved_at?: string;
 }
 
-const AuthorBioEditor: React.FC = () => {
+interface AuthorBioEditorProps {
+  mode?: 'all' | 'bio' | 'types';
+}
+
+const AuthorBioEditor: React.FC<AuthorBioEditorProps> = ({ mode = 'all' }) => {
   const { token, user } = useAppSelector(state => state.auth);
   const { t, i18n } = useTranslation();
+  const showBioSection = mode === 'all' || mode === 'bio';
+  const showTypesSection = mode === 'all' || mode === 'types';
   const [bio, setBio] = useState('');
   const [bioApproved, setBioApproved] = useState(false);
   const [bioEn, setBioEn] = useState('');
@@ -95,17 +101,24 @@ const AuthorBioEditor: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await axios.put('/api/auth/profile/author', {
-        bio,
-        bioEn,
-        artworkTypeIds: selectedTypeIds
-      }, {
+      const payload: { bio?: string; bioEn?: string; artworkTypeIds?: number[] } = {};
+      if (showBioSection) {
+        payload.bio = bio;
+        payload.bioEn = bioEn;
+      }
+      if (showTypesSection) {
+        payload.artworkTypeIds = selectedTypeIds;
+      }
+
+      await axios.put('/api/auth/profile/author', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setSuccess(t('authorBio.profileSubmitted'));
-      setBioApproved(false); // Profile is now pending
-      setBioEnApproved(false); // Profile is now pending
+      if (showBioSection) {
+        setBioApproved(false); // Profile is now pending
+        setBioEnApproved(false); // Profile is now pending
+      }
       setTimeout(() => setSuccess(null), 5000);
       
       // Emit custom event to notify other components about profile update
@@ -139,13 +152,14 @@ const AuthorBioEditor: React.FC = () => {
       {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
       {success && <Alert variant="success" onClose={() => setSuccess(null)} dismissible>{success}</Alert>}
       
-      {!bioApproved && bio && (
+      {showBioSection && !bioApproved && bio && (
         <Alert variant="warning">
           {t('authorBio.pendingApproval')}
         </Alert>
       )}
 
       <Form onSubmit={handleSubmit}>
+        {showBioSection && (
         <Card className="mb-4">
           <Card.Header>
             <strong>{t('authorBio.biography')}</strong>
@@ -190,7 +204,9 @@ const AuthorBioEditor: React.FC = () => {
             </Form.Group>
           </Card.Body>
         </Card>
+        )}
 
+        {showTypesSection && (
         <Card className="mb-4">
           <Card.Header>
             <strong>{t('authorBio.artworkTypes')}</strong>
@@ -232,6 +248,7 @@ const AuthorBioEditor: React.FC = () => {
             </div>
           </Card.Body>
         </Card>
+        )}
 
         <Button variant="primary" type="submit" disabled={loading}>
           {loading ? t('authorBio.saving') : t('authorBio.saveProfileButton')}
