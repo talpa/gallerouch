@@ -34,21 +34,19 @@ const AdminLayout: React.FC = () => {
       <header className="admin-header">
         <div className="header-content">
           <h1>{user?.role === 'admin' ? t('header.adminPanel') : t('header.myGallery')}</h1>
-          <p style={{fontSize: '10px', color: 'red'}}>DEBUG: role={user?.role}, isAdmin={user?.role === 'admin'}</p>
           <nav className="main-nav">
             <NavLink to="/" end>{t('common.home')}</NavLink>
-            
-              <NavLink to="/admin/settings" className="settings-link">
-                ⚙️ {t('admin.settings')} tttttt
-              </NavLink>
-                {user?.role === 'admin' ? (
+
+            {user?.role === 'admin' ? (
               <>
                 <NavLink to="/admin/gallery">{t('gallery.allArtworks')}</NavLink>
                 <NavLink to="/admin/users">{t('admin.users')}</NavLink>
                 <NavLink to="/admin/payments">💰 {t('admin.payments') || 'Platby'}</NavLink>
+                <NavLink to="/admin/settings" className="settings-link">
+                  ⚙️ {t('admin.settings')}
+                </NavLink>
                 <div className="nav-group">
                   <span className="nav-group-label">✅ {t('admin.approvals')}</span>
-                  <NavLink to="/admin/offers">📋 {t('admin.offers') || 'Nabídky'}</NavLink>
                   <NavLink to="/admin/approvals">{t('header.adminApprovals')}</NavLink>
                   <NavLink to="/admin/artwork-approvals">{t('header.adminArtworkApprovals')}</NavLink>
                   <NavLink to="/admin/profile-approvals">{t('header.adminProfileApprovals')}</NavLink>

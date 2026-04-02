@@ -21,8 +21,6 @@ interface UserProfileData {
   bankAccountNumber?: string;
   bankCode?: string;
   bankName?: string;
-  bio?: string;
-  bioEn?: string;
   profileApproved?: boolean;
   profileApprovedAt?: string;
   profileApprovedBy?: number;
@@ -131,7 +129,6 @@ const AdminProfileApprovals: React.FC = () => {
             <tr>
               <th>{t('profile.username') || 'Uživatel'}</th>
               <th>{t('profile.email')}</th>
-              <th>{t('profile.bio') || 'Biografie'}</th>
               <th>{t('profile.role')}</th>
               <th>{t('profile.approvalStatus')}</th>
               <th>{t('profile.registered')}</th>
@@ -143,13 +140,6 @@ const AdminProfileApprovals: React.FC = () => {
               <tr key={user.id}>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td>
-                  <div style={{ fontSize: '0.85rem' }}>
-                    {user.bio && <span style={{ color: '#28a745', marginRight: '0.5rem' }}>🇨🇿 CS</span>}
-                    {user.bioEn && <span style={{ color: '#007bff' }}>🇬🇧 EN</span>}
-                    {!user.bio && !user.bioEn && <em style={{ color: '#999' }}>-</em>}
-                  </div>
-                </td>
                 <td>
                   <span className={`badge ${user.role === 'admin' ? 'bg-danger' : 'bg-secondary'}`}>
                     {user.role}
@@ -219,27 +209,6 @@ const AdminProfileApprovals: React.FC = () => {
                 </p>
                 {selectedUser.profileApprovedAt && (
                   <p><strong>{t('profile.approvedDate')}:</strong> {new Date(selectedUser.profileApprovedAt).toLocaleDateString('cs-CZ')}</p>
-                )}
-              </div>
-
-              <div className="profile-section">
-                <h4>{t('profile.bio') || 'Biografie'}</h4>
-                {selectedUser.bio && (
-                  <p>
-                    <strong>Česky:</strong>
-                    <br />
-                    {selectedUser.bio}
-                  </p>
-                )}
-                {selectedUser.bioEn && (
-                  <p>
-                    <strong>English:</strong>
-                    <br />
-                    {selectedUser.bioEn}
-                  </p>
-                )}
-                {!selectedUser.bio && !selectedUser.bioEn && (
-                  <p><em>{t('profile.notFilled')}</em></p>
                 )}
               </div>
 
