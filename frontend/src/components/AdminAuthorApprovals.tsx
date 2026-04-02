@@ -9,9 +9,13 @@ interface UserBio {
   username: string;
   email: string;
   bio?: string;
+  bio_en?: string;
   bio_approved: boolean;
   bio_approved_at?: string;
   bio_approved_by?: number;
+  bio_en_approved?: boolean;
+  bio_en_approved_at?: string;
+  bio_en_approved_by?: number;
 }
 
 interface ArtworkType {
@@ -61,15 +65,23 @@ const AdminAuthorApprovals: React.FC = () => {
       
       // Extract users with pending bios
       const pendingBioUsers = users
-        .filter((user: any) => user.bio && !user.bio_approved)
+        .filter((user: any) => {
+          const hasPendingCsBio = !!user.bio && !user.bio_approved;
+          const hasPendingEnBio = !!user.bio_en && !user.bio_en_approved;
+          return hasPendingCsBio || hasPendingEnBio;
+        })
         .map((user: any) => ({
           id: user.id,
           username: user.username,
           email: user.email,
           bio: user.bio,
+          bio_en: user.bio_en,
           bio_approved: user.bio_approved,
           bio_approved_at: user.bio_approved_at,
-          bio_approved_by: user.bio_approved_by
+          bio_approved_by: user.bio_approved_by,
+          bio_en_approved: user.bio_en_approved,
+          bio_en_approved_at: user.bio_en_approved_at,
+          bio_en_approved_by: user.bio_en_approved_by
         }));
       setPendingBios(pendingBioUsers);
 
@@ -222,10 +234,19 @@ const AdminAuthorApprovals: React.FC = () => {
                     <td>{user.username}</td>
                     <td>{user.email}</td>
                     <td>
-                      <div style={{ maxWidth: '400px', whiteSpace: 'pre-wrap' }}>
-                        {user.bio && user.bio.length > 100 
-                          ? user.bio.substring(0, 100) + '...' 
-                          : user.bio}
+                      <div style={{ maxWidth: '500px', whiteSpace: 'pre-wrap' }}>
+                        <div>
+                          <strong>CS:</strong>{' '}
+                          {user.bio
+                            ? (user.bio.length > 100 ? `${user.bio.substring(0, 100)}...` : user.bio)
+                            : <em>{t('profile.notFilled')}</em>}
+                        </div>
+                        <div className="mt-2">
+                          <strong>EN:</strong>{' '}
+                          {user.bio_en
+                            ? (user.bio_en.length > 100 ? `${user.bio_en.substring(0, 100)}...` : user.bio_en)
+                            : <em>{t('profile.notFilled')}</em>}
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -324,8 +345,15 @@ const AdminAuthorApprovals: React.FC = () => {
               <p><strong>{t('common.email')}:</strong> {selectedBio.email}</p>
               <hr />
               <h5>{t('common.bio')}:</h5>
-              <div style={{ whiteSpace: 'pre-wrap', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
-                {selectedBio.bio || t('common.noBio')}
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+                <div style={{ whiteSpace: 'pre-wrap' }}>
+                  <strong>CS:</strong>
+                  <div>{selectedBio.bio || t('profile.notFilled')}</div>
+                </div>
+                <div className="mt-3" style={{ whiteSpace: 'pre-wrap' }}>
+                  <strong>EN:</strong>
+                  <div>{selectedBio.bio_en || t('profile.notFilled')}</div>
+                </div>
               </div>
             </>
           )}

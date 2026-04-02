@@ -1149,9 +1149,14 @@ router.post('/profile/:userId/approve-bio', authenticateToken, requireAdmin, asy
     
     const result = await client.query(
       `UPDATE users 
-       SET bio_approved = true, bio_approved_at = NOW(), bio_approved_by = $1
+       SET bio_approved = CASE WHEN COALESCE(TRIM(bio), '') <> '' THEN true ELSE bio_approved END,
+           bio_approved_at = CASE WHEN COALESCE(TRIM(bio), '') <> '' THEN NOW() ELSE bio_approved_at END,
+           bio_approved_by = CASE WHEN COALESCE(TRIM(bio), '') <> '' THEN $1 ELSE bio_approved_by END,
+           bio_en_approved = CASE WHEN COALESCE(TRIM(bio_en), '') <> '' THEN true ELSE bio_en_approved END,
+           bio_en_approved_at = CASE WHEN COALESCE(TRIM(bio_en), '') <> '' THEN NOW() ELSE bio_en_approved_at END,
+           bio_en_approved_by = CASE WHEN COALESCE(TRIM(bio_en), '') <> '' THEN $1 ELSE bio_en_approved_by END
        WHERE id = $2
-       RETURNING id, username, bio, bio_approved, bio_approved_at`,
+       RETURNING id, username, bio, bio_approved, bio_approved_at, bio_en, bio_en_approved, bio_en_approved_at`,
       [adminId, userId]
     );
     
@@ -1178,9 +1183,16 @@ router.post('/profile/:userId/reject-bio', authenticateToken, requireAdmin, asyn
     
     const result = await client.query(
       `UPDATE users 
-       SET bio = NULL, bio_approved = false, bio_approved_at = NULL, bio_approved_by = NULL
+       SET bio = NULL,
+           bio_approved = false,
+           bio_approved_at = NULL,
+           bio_approved_by = NULL,
+           bio_en = NULL,
+           bio_en_approved = false,
+           bio_en_approved_at = NULL,
+           bio_en_approved_by = NULL
        WHERE id = $1
-       RETURNING id, username, bio, bio_approved`,
+       RETURNING id, username, bio, bio_approved, bio_en, bio_en_approved`,
       [userId]
     );
     
@@ -1264,11 +1276,15 @@ router.get('/pending-profiles', authenticateToken, requireAdmin, async (req, res
     
     // Get users with pending bio or pending artwork types
     const usersResult = await client.query(`
-      SELECT DISTINCT u.id, u.username, u.email, u.bio, u.bio_approved,
+      SELECT DISTINCT u.id, u.username, u.email,
+             u.bio, u.bio_approved, u.bio_approved_at, u.bio_approved_by,
+             u.bio_en, u.bio_en_approved, u.bio_en_approved_at, u.bio_en_approved_by,
              (SELECT COUNT(*) FROM user_artwork_types WHERE user_id = u.id AND approved = false) as pending_types_count
       FROM users u
       LEFT JOIN user_artwork_types uat ON u.id = uat.user_id
-      WHERE u.bio_approved = false OR uat.approved = false
+      WHERE (COALESCE(TRIM(u.bio), '') <> '' AND u.bio_approved = false)
+         OR (COALESCE(TRIM(u.bio_en), '') <> '' AND u.bio_en_approved = false)
+         OR uat.approved = false
       ORDER BY u.username
     `);
     
