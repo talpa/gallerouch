@@ -341,7 +341,7 @@ router.get('/users', authenticateToken, requireAdmin, async (req, res) => {
        FROM users ORDER BY created_at DESC`
     );
     await client.end();
-    res.json(result.rows);
+    res.json(result.rows.map(row => toCamel(row)));
   } catch (err) {
     await client.end();
     res.status(500).json({ error: err.message });

@@ -9,23 +9,23 @@ interface UserProfileData {
   username: string;
   email: string;
   role: string;
-  created_at: string;
-  birth_number?: string;
-  permanent_address?: string;
-  permanent_city?: string;
-  permanent_postal_code?: string;
+  createdAt: string;
+  birthNumber?: string;
+  permanentAddress?: string;
+  permanentCity?: string;
+  permanentPostalCode?: string;
   country?: string;
   address?: string;
   city?: string;
-  postal_code?: string;
-  bank_account_number?: string;
-  bank_code?: string;
-  bank_name?: string;
+  postalCode?: string;
+  bankAccountNumber?: string;
+  bankCode?: string;
+  bankName?: string;
   bio?: string;
-  bio_en?: string;
-  profile_approved?: boolean;
-  profile_approved_at?: string;
-  profile_approved_by?: number;
+  bioEn?: string;
+  profileApproved?: boolean;
+  profileApprovedAt?: string;
+  profileApprovedBy?: number;
 }
 
 const AdminProfileApprovals: React.FC = () => {
@@ -84,15 +84,15 @@ const AdminProfileApprovals: React.FC = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    if (filter === 'pending') return user.profile_approved === false && !user.profile_approved_at;
-    if (filter === 'approved') return user.profile_approved === true;
-    if (filter === 'rejected') return user.profile_approved === false && user.profile_approved_at;
+    if (filter === 'pending') return user.profileApproved === false && !user.profileApprovedAt;
+    if (filter === 'approved') return user.profileApproved === true;
+    if (filter === 'rejected') return user.profileApproved === false && user.profileApprovedAt;
     return true;
   });
 
-  const pendingCount = users.filter(u => u.profile_approved === false && !u.profile_approved_at).length;
-  const approvedCount = users.filter(u => u.profile_approved === true).length;
-  const rejectedCount = users.filter(u => u.profile_approved === false && u.profile_approved_at).length;
+  const pendingCount = users.filter(u => u.profileApproved === false && !u.profileApprovedAt).length;
+  const approvedCount = users.filter(u => u.profileApproved === true).length;
+  const rejectedCount = users.filter(u => u.profileApproved === false && u.profileApprovedAt).length;
 
   if (loading) {
     return <div className="admin-profile-approvals"><p>{t('common.loading')}</p></div>;
@@ -146,8 +146,8 @@ const AdminProfileApprovals: React.FC = () => {
                 <td>
                   <div style={{ fontSize: '0.85rem' }}>
                     {user.bio && <span style={{ color: '#28a745', marginRight: '0.5rem' }}>🇨🇿 CS</span>}
-                    {user.bio_en && <span style={{ color: '#007bff' }}>🇬🇧 EN</span>}
-                    {!user.bio && !user.bio_en && <em style={{ color: '#999' }}>-</em>}
+                    {user.bioEn && <span style={{ color: '#007bff' }}>🇬🇧 EN</span>}
+                    {!user.bio && !user.bioEn && <em style={{ color: '#999' }}>-</em>}
                   </div>
                 </td>
                 <td>
@@ -156,13 +156,13 @@ const AdminProfileApprovals: React.FC = () => {
                   </span>
                 </td>
                 <td>
-                  {user.profile_approved ? (
+                  {user.profileApproved ? (
                     <span className="badge bg-success">{t('profile.approved')}</span>
                   ) : (
                     <span className="badge bg-warning">{t('profile.pending')}</span>
                   )}
                 </td>
-                <td>{new Date(user.created_at).toLocaleDateString('cs-CZ')}</td>
+                <td>{new Date(user.createdAt).toLocaleDateString('cs-CZ')}</td>
                 <td>
                   <div className="d-flex gap-1 justify-content-start">
                     <button
@@ -172,7 +172,7 @@ const AdminProfileApprovals: React.FC = () => {
                     >
                       {t('profile.detail')}
                     </button>
-                    {!user.profile_approved && (
+                    {!user.profileApproved && (
                       <>
                         <button
                           className="btn btn-sm btn-success"
@@ -211,17 +211,17 @@ const AdminProfileApprovals: React.FC = () => {
                 <h4>{t('profile.basicInfo')}</h4>
                 <p><strong>{t('profile.email')}:</strong> {selectedUser.email}</p>
                 <p><strong>{t('profile.role')}:</strong> {selectedUser.role}</p>
-                <p><strong>{t('profile.registered')}:</strong> {new Date(selectedUser.created_at).toLocaleDateString('cs-CZ')}</p>
+                <p><strong>{t('profile.registered')}:</strong> {new Date(selectedUser.createdAt).toLocaleDateString('cs-CZ')}</p>
                 <p>
                   <strong>{t('profile.approvalStatus')}:</strong>{' '}
-                  {selectedUser.profile_approved ? (
+                  {selectedUser.profileApproved ? (
                     <span className="text-success">✅ {t('profile.approved')}</span>
                   ) : (
                     <span className="text-warning">⚠️ {t('profile.pending')}</span>
                   )}
                 </p>
-                {selectedUser.profile_approved_at && (
-                  <p><strong>{t('profile.approvedDate')}:</strong> {new Date(selectedUser.profile_approved_at).toLocaleDateString('cs-CZ')}</p>
+                {selectedUser.profileApprovedAt && (
+                  <p><strong>{t('profile.approvedDate')}:</strong> {new Date(selectedUser.profileApprovedAt).toLocaleDateString('cs-CZ')}</p>
                 )}
               </div>
 
@@ -234,28 +234,28 @@ const AdminProfileApprovals: React.FC = () => {
                     {selectedUser.bio}
                   </p>
                 )}
-                {selectedUser.bio_en && (
+                {selectedUser.bioEn && (
                   <p>
                     <strong>English:</strong>
                     <br />
-                    {selectedUser.bio_en}
+                    {selectedUser.bioEn}
                   </p>
                 )}
-                {!selectedUser.bio && !selectedUser.bio_en && (
+                {!selectedUser.bio && !selectedUser.bioEn && (
                   <p><em>{t('profile.notFilled')}</em></p>
                 )}
               </div>
 
               <div className="profile-section">
                 <h4>{t('profile.personalData')}</h4>
-                <p><strong>{t('profile.birthNumber')}:</strong> {selectedUser.birth_number || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.birthNumber')}:</strong> {selectedUser.birthNumber || t('profile.notFilled')}</p>
               </div>
 
               <div className="profile-section">
                 <h4>{t('profile.permanentAddress')}</h4>
-                <p><strong>{t('profile.street')}:</strong> {selectedUser.permanent_address || t('profile.notFilled')}</p>
-                <p><strong>{t('profile.city')}:</strong> {selectedUser.permanent_city || t('profile.notFilled')}</p>
-                <p><strong>{t('profile.postalCode')}:</strong> {selectedUser.permanent_postal_code || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.street')}:</strong> {selectedUser.permanentAddress || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.city')}:</strong> {selectedUser.permanentCity || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.postalCode')}:</strong> {selectedUser.permanentPostalCode || t('profile.notFilled')}</p>
                 <p><strong>{t('profile.country')}:</strong> {selectedUser.country || t('profile.notFilled')}</p>
               </div>
 
@@ -263,18 +263,18 @@ const AdminProfileApprovals: React.FC = () => {
                 <h4>{t('profile.correspondenceAddress')}</h4>
                 <p><strong>{t('profile.street')}:</strong> {selectedUser.address || t('profile.notFilled')}</p>
                 <p><strong>{t('profile.city')}:</strong> {selectedUser.city || t('profile.notFilled')}</p>
-                <p><strong>{t('profile.postalCode')}:</strong> {selectedUser.postal_code || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.postalCode')}:</strong> {selectedUser.postalCode || t('profile.notFilled')}</p>
               </div>
 
               <div className="profile-section">
                 <h4>{t('profile.bankingDetails')}</h4>
-                <p><strong>{t('profile.accountNumber')}:</strong> {selectedUser.bank_account_number || t('profile.notFilled')}</p>
-                <p><strong>{t('profile.bankCode')}:</strong> {selectedUser.bank_code || t('profile.notFilled')}</p>
-                <p><strong>{t('profile.bankName')}:</strong> {selectedUser.bank_name || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.accountNumber')}:</strong> {selectedUser.bankAccountNumber || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.bankCode')}:</strong> {selectedUser.bankCode || t('profile.notFilled')}</p>
+                <p><strong>{t('profile.bankName')}:</strong> {selectedUser.bankName || t('profile.notFilled')}</p>
               </div>
 
               <div className="modal-actions">
-                {!selectedUser.profile_approved && (
+                {!selectedUser.profileApproved && (
                   <>
                     <button
                       className="btn btn-success me-2"
