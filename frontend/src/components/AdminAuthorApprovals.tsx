@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../hooks';
 import axios from 'axios';
 import { Table, Button, Badge, Card, Alert, Spinner, Modal } from 'react-bootstrap';
+import './AdminAuthorApprovals.css';
 
 interface UserBio {
   id: number;
@@ -252,23 +253,24 @@ const AdminAuthorApprovals: React.FC = () => {
                     <td>
                       <Button 
                         size="sm" 
-                        variant="info" 
-                        className="me-2"
+                        variant="light"
+                        className="me-2 compact-action-btn compact-detail-btn"
                         onClick={() => openBioModal(user)}
                       >
                         {t('common.detail')}
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="outline-success" 
-                        className="me-2"
+                        variant="light"
+                        className="me-2 compact-action-btn compact-approve-btn"
                         onClick={() => handleApproveBio(user.id)}
                       >
                         {t('common.approve')}
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="outline-danger"
+                        variant="light"
+                        className="compact-action-btn compact-reject-btn"
                         onClick={() => handleRejectBio(user.id)}
                       >
                         {t('common.reject')}
@@ -311,15 +313,16 @@ const AdminAuthorApprovals: React.FC = () => {
                     <td>
                       <Button 
                         size="sm" 
-                        variant="outline-success" 
-                        className="me-2"
+                        variant="light"
+                        className="me-2 compact-action-btn compact-approve-btn"
                         onClick={() => handleApproveArtworkType(item.user_id, item.artwork_type_id)}
                       >
                         {t('common.approve')}
                       </Button>
                       <Button 
                         size="sm" 
-                        variant="outline-danger"
+                        variant="light"
+                        className="compact-action-btn compact-reject-btn"
                         onClick={() => handleRejectArtworkType(item.user_id, item.artwork_type_id)}
                       >
                         {t('common.reject')}

@@ -57,15 +57,59 @@
 }
 
 .table-action-buttons .btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.74rem;
   white-space: nowrap;
   border-radius: 0.25rem;
   transition: all 0.3s ease;
+  min-width: 58px;
+  line-height: 1.2;
 }
 .table-action-buttons .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+}
+
+.action-btn {
+  border-width: 1px;
+  font-weight: 500;
+  background-color: #fff;
+}
+
+.action-btn-detail {
+  color: #2563eb;
+  border-color: #93c5fd;
+}
+
+.action-btn-detail:hover,
+.action-btn-detail:focus {
+  color: #1d4ed8;
+  border-color: #60a5fa;
+  background-color: #eff6ff;
+}
+
+.action-btn-approve {
+  color: #166534;
+  border-color: #86efac;
+}
+
+.action-btn-approve:hover,
+.action-btn-approve:focus {
+  color: #14532d;
+  border-color: #4ade80;
+  background-color: #f0fdf4;
+}
+
+.action-btn-reject {
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.action-btn-reject:hover,
+.action-btn-reject:focus {
+  color: #7f1d1d;
+  border-color: #f87171;
+  background-color: #fef2f2;
 }
 
 .modal-overlay {
@@ -205,6 +249,7 @@
 
   .table-action-buttons .btn {
     width: 100%;
+    min-width: 0;
   }
 
   .modal-content {

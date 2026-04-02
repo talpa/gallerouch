@@ -164,10 +164,9 @@ const AdminProfileApprovals: React.FC = () => {
                 </td>
                 <td>{new Date(user.createdAt).toLocaleDateString('cs-CZ')}</td>
                 <td>
-                  <div className="d-flex gap-1 justify-content-start">
+                  <div className="table-action-buttons">
                     <button
-                      className="btn btn-sm btn-info"
-                      style={{ minWidth: '65px', fontSize: '0.8rem', padding: '0.2rem 0.4rem' }}
+                      className="btn btn-sm action-btn action-btn-detail"
                       onClick={() => setSelectedUser(user)}
                     >
                       {t('profile.detail')}
@@ -175,15 +174,13 @@ const AdminProfileApprovals: React.FC = () => {
                     {!user.profileApproved && (
                       <>
                         <button
-                          className="btn btn-sm btn-outline-success"
-                          style={{ minWidth: '65px', fontSize: '0.8rem', padding: '0.2rem 0.4rem' }}
+                          className="btn btn-sm action-btn action-btn-approve"
                           onClick={() => handleApprove(user.id)}
                         >
                           {t('common.approve')}
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger"
-                          style={{ minWidth: '65px', fontSize: '0.8rem', padding: '0.2rem 0.4rem' }}
+                          className="btn btn-sm action-btn action-btn-reject"
                           onClick={() => handleReject(user.id)}
                         >
                           {t('common.reject')}
