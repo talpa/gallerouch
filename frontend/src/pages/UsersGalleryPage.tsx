@@ -24,6 +24,15 @@ const UsersGalleryPage: React.FC = () => {
   const isAuthor = filterType === 'author';
   const pageTitle = isAuthor ? t('gallery.authors') : t('gallery.owners');
 
+  const normalizeArrayPayload = <T,>(payload: any): T[] => {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    if (payload && Array.isArray(payload.items)) return payload.items;
+    if (payload && Array.isArray(payload.users)) return payload.users;
+    return [];
+  };
+
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -33,7 +42,7 @@ const UsersGalleryPage: React.FC = () => {
           ? '/api/artworks/authors' 
           : '/api/artworks/owners';
         const res = await axios.get(endpoint);
-        setUsers(res.data);
+        setUsers(normalizeArrayPayload(res.data));
       } catch (err: any) {
         setError(err?.message || t('messages.error'));
       } finally {
