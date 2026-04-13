@@ -67,6 +67,14 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
     artworkTypeId: 0
   });
 
+  const normalizeArrayPayload = <T,>(payload: any): T[] => {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    if (payload && Array.isArray(payload.items)) return payload.items;
+    return [];
+  };
+
   // Převod statusu z URL formátu na backend formát
   const backendStatus = initialStatus.replace('_', ' ');
 
@@ -172,11 +180,11 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
         
         // Načti artwork types s počty pro daný status (pro filtraci)
         const typesRes = await axios.get(`/api/artworks/types-by-status?status=${backendStatus}`);
-        setArtworkTypes(typesRes.data);
+        setArtworkTypes(normalizeArrayPayload(typesRes.data));
         
         // Načti všechny artwork types (pro edit modal)
         const allTypesRes = await axios.get('/api/auth/artwork-types');
-        setAllArtworkTypes(allTypesRes.data);
+        setAllArtworkTypes(normalizeArrayPayload(allTypesRes.data));
       } catch (err: any) {
         setError(err?.message || t('messages.error'));
       } finally {
