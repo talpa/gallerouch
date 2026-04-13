@@ -35,6 +35,53 @@ async function ensureUniqueUsername(client, preferred) {
   return `${base}_${Date.now()}`;
 }
 
+async function findOrCreateOAuthUser(client, { email, preferredUsername, provider, passwordHash }) {
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  const fallbackEmail = `${provider}_${Date.now()}@${provider}.local`;
+  const safeEmail = normalizedEmail || fallbackEmail;
+
+  const existingByEmail = await client.query('SELECT * FROM users WHERE email = $1 LIMIT 1', [safeEmail]);
+  if (existingByEmail.rows.length > 0) {
+    const user = existingByEmail.rows[0];
+    if (!user.provider) {
+      await client.query('UPDATE users SET provider = $1 WHERE id = $2', [provider, user.id]);
+      user.provider = provider;
+    }
+    return user;
+  }
+
+  let username = await ensureUniqueUsername(client, preferredUsername);
+
+  for (let attempt = 1; attempt <= 10; attempt += 1) {
+    try {
+      const insertResult = await client.query(
+        'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [username, safeEmail, passwordHash, 'user', provider]
+      );
+      return insertResult.rows[0];
+    } catch (err) {
+      // 23505 = unique_violation
+      if (err?.code === '23505') {
+        if (err?.constraint === 'users_email_key') {
+          const emailResult = await client.query('SELECT * FROM users WHERE email = $1 LIMIT 1', [safeEmail]);
+          if (emailResult.rows.length > 0) {
+            return emailResult.rows[0];
+          }
+        }
+
+        if (err?.constraint === 'users_username_key') {
+          username = await ensureUniqueUsername(client, `${preferredUsername}_${attempt}`);
+          continue;
+        }
+      }
+
+      throw err;
+    }
+  }
+
+  throw new Error(`Unable to create OAuth user for provider ${provider}`);
+}
+
 // Google OAuth Strategy (pouze pokud jsou nastavené credentials)
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
@@ -48,37 +95,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       await client.connect();
       const googleEmail = (profile.emails?.[0]?.value || '').trim().toLowerCase() || `google_${profile.id}@google.local`;
       const googleUsername = profile.displayName || googleEmail.split('@')[0] || `google_${profile.id}`;
-      
-      // Zkontroluj jestli uživatel existuje
-      const result = await client.query(
-        'SELECT * FROM users WHERE email = $1',
-        [googleEmail]
-      );
-      
-      let user;
-      if (result.rows.length > 0) {
-        // Uživatel již existuje
-        user = result.rows[0];
-      } else {
-        // Vytvoř nového uživatele
-        const uniqueUsername = await ensureUniqueUsername(client, googleUsername);
-        const insertResult = await client.query(
-          'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-          [
-            uniqueUsername,
-            googleEmail,
-            'oauth-google',
-            'user',
-            'google'
-          ]
-        );
-        user = insertResult.rows[0];
-      }
-      // ensure provider is set for existing users
-      if (user && !user.provider) {
-        await client.query('UPDATE users SET provider = $1 WHERE id = $2', ['google', user.id]);
-      }
-      
+
+      const user = await findOrCreateOAuthUser(client, {
+        email: googleEmail,
+        preferredUsername: googleUsername,
+        provider: 'google',
+        passwordHash: 'oauth-google',
+      });
+
       await client.end();
       done(null, user);
     } catch (err) {
@@ -106,36 +130,14 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
       await client.connect();
       const facebookEmail = (profile.emails?.[0]?.value || '').trim().toLowerCase() || `facebook_${profile.id}@facebook.local`;
       const facebookUsername = profile.displayName || facebookEmail.split('@')[0] || `facebook_${profile.id}`;
-      
-      // Zkontroluj jestli uživatel existuje
-      const result = await client.query(
-        'SELECT * FROM users WHERE email = $1',
-        [facebookEmail]
-      );
-      
-      let user;
-      if (result.rows.length > 0) {
-        // Uživatel již existuje
-        user = result.rows[0];
-      } else {
-        // Vytvoř nového uživatele
-        const uniqueUsername = await ensureUniqueUsername(client, facebookUsername);
-        const insertResult = await client.query(
-          'INSERT INTO users (username, email, password_hash, role, provider) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-          [
-            uniqueUsername,
-            facebookEmail,
-            'oauth-facebook',
-            'user',
-            'facebook'
-          ]
-        );
-        user = insertResult.rows[0];
-      }
-      if (user && !user.provider) {
-        await client.query('UPDATE users SET provider = $1 WHERE id = $2', ['facebook', user.id]);
-      }
-      
+
+      const user = await findOrCreateOAuthUser(client, {
+        email: facebookEmail,
+        preferredUsername: facebookUsername,
+        provider: 'facebook',
+        passwordHash: 'oauth-facebook',
+      });
+
       await client.end();
       done(null, user);
     } catch (err) {
