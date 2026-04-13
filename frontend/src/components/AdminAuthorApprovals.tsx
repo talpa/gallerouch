@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../hooks';
 import axios from 'axios';
 import { Table, Button, Badge, Card, Alert, Spinner, Modal } from 'react-bootstrap';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './AdminAuthorApprovals.css';
 
 interface UserBio {
@@ -62,7 +63,7 @@ const AdminAuthorApprovals: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      const users = response.data;
+      const users = normalizeArrayPayload<any>(response.data);
       
       // Extract users with pending bios
       const pendingBioUsers = users

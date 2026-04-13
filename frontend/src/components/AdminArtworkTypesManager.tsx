@@ -7,6 +7,7 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './AdminGalleryManager.css';
 
 interface ArtworkType {
@@ -42,7 +43,7 @@ const AdminArtworkTypesManager: React.FC = () => {
       const res = await axios.get('/api/auth/artwork-types-admin', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTypes(res.data);
+      setTypes(normalizeArrayPayload<ArtworkType>(res.data));
     } catch (err) {
       console.error('Failed to load artwork types:', err);
       setError('Chyba při načítání typů uměleckých děl');

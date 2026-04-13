@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Container, Table, Button, Badge, Modal, Form, Alert, Spinner } from 'react-bootstrap';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './AdminPaymentsManager.css';
 
 interface Payment {
@@ -78,7 +79,7 @@ const AdminPaymentsManager: React.FC = () => {
       const response = await axios.get('/api/payments', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPayments(response.data);
+      setPayments(normalizeArrayPayload<Payment>(response.data));
     } catch (err: any) {
       console.error('Error loading payments:', err);
       setError(err.response?.data?.error || t('payments.loadError') || 'Chyba načítání plateb');

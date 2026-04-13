@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { fetchArtworks } from '../api/artworks';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import { Modal, Button, Form, Tabs, Tab } from 'react-bootstrap';
 import axios from 'axios';
 import ArtworkImageManager from './ArtworkImageManager';
@@ -66,14 +67,6 @@ const FilteredArtworkList: React.FC<FilteredArtworkListProps> = ({ initialStatus
     description: '',
     artworkTypeId: 0
   });
-
-  const normalizeArrayPayload = <T,>(payload: any): T[] => {
-    if (Array.isArray(payload)) return payload;
-    if (payload && Array.isArray(payload.data)) return payload.data;
-    if (payload && Array.isArray(payload.rows)) return payload.rows;
-    if (payload && Array.isArray(payload.items)) return payload.items;
-    return [];
-  };
 
   // Převod statusu z URL formátu na backend formát
   const backendStatus = initialStatus.replace('_', ' ');

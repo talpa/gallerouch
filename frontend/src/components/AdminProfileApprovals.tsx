@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '../hooks';
 import axios from 'axios';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './AdminProfileApprovals.css';
 
 interface UserProfileData {
@@ -45,7 +46,7 @@ const AdminProfileApprovals: React.FC = () => {
       const response = await axios.get('/api/auth/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(response.data);
+      setUsers(normalizeArrayPayload<UserProfileData>(response.data));
       setError('');
     } catch (err) {
       console.error('Failed to fetch users:', err);

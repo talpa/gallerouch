@@ -11,6 +11,7 @@ import Tab from 'react-bootstrap/Tab';
 import Badge from 'react-bootstrap/Badge';
 import { useAppSelector } from '../hooks';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import ArtworkImageManager from './ArtworkImageManager';
 import ArtworkEventsManager from './ArtworkEventsManager';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -77,7 +78,7 @@ const AdminGalleryManager: React.FC = () => {
   const loadArtworks = async () => {
     try {
       const res = await axios.get('/api/artworks');
-      setArtworks(res.data);
+      setArtworks(normalizeArrayPayload<Artwork>(res.data));
     } catch (err) {
       console.error('Failed to load artworks:', err);
     }
@@ -213,7 +214,8 @@ const AdminGalleryManager: React.FC = () => {
       if (!editingArtwork && artworkId) {
         // For new artworks, load and set as editing to show images/events tabs
         const res = await axios.get(`/api/artworks`);
-        const newArtwork = res.data.find((a: Artwork) => a.id === artworkId);
+        const allArtworks = normalizeArrayPayload<Artwork>(res.data);
+        const newArtwork = allArtworks.find((a: Artwork) => a.id === artworkId);
         if (newArtwork) {
           setEditingArtwork(newArtwork);
           setActiveTab('images');

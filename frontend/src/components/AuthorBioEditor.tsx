@@ -7,6 +7,7 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import Card from 'react-bootstrap/Card';
 import Badge from 'react-bootstrap/Badge';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './AuthorBioEditor.css';
 
 interface ArtworkType {
@@ -46,7 +47,7 @@ const AuthorBioEditor: React.FC<AuthorBioEditorProps> = ({ mode = 'all' }) => {
       setBioApproved(res.data.bio_approved || false);
       setBioEn(res.data.bio_en || '');
       setBioEnApproved(res.data.bio_en_approved || false);
-      const artworkTypes = res.data.artworkTypes || [];
+      const artworkTypes = normalizeArrayPayload<ArtworkType>(res.data.artworkTypes);
       setUserTypes(artworkTypes);
       
       // Pre-select artwork types (both approved and pending)
@@ -60,7 +61,7 @@ const AuthorBioEditor: React.FC<AuthorBioEditorProps> = ({ mode = 'all' }) => {
   const loadArtworkTypes = useCallback(async () => {
     try {
       const res = await axios.get('/api/auth/artwork-types');
-      setAvailableTypes(res.data);
+      setAvailableTypes(normalizeArrayPayload<ArtworkType>(res.data));
     } catch (err) {
       console.error('Failed to load artwork types:', err);
     }

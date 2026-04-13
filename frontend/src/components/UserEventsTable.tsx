@@ -6,6 +6,7 @@ import Alert from 'react-bootstrap/Alert';
 import Badge from 'react-bootstrap/Badge';
 import { useAppSelector } from '../hooks';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import axios from 'axios';
 import './UserEventsTable.css';
 
@@ -37,7 +38,7 @@ const UserEventsTable: React.FC = () => {
       headers: { Authorization: `Bearer ${token}` },
       params: { userId: user.id, status: 'all' }
     })
-      .then(res => setEvents(res.data))
+      .then(res => setEvents(normalizeArrayPayload<UserEvent>(res.data)))
       .catch(err => {
         console.error('Error loading events:', err);
         setError(t('events.loadError'));

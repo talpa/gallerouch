@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Container, Table, Badge, Alert, Spinner, Button } from 'react-bootstrap';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import './UserPaymentsManager.css';
 
 interface Payment {
@@ -66,7 +67,7 @@ const UserPaymentsManager: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Already filtered by backend to user's payments (as buyer or seller)
-      setPayments(response.data);
+      setPayments(normalizeArrayPayload<Payment>(response.data));
     } catch (err: any) {
       console.error('Error loading payments:', err);
       setError(err.response?.data?.error || t('payments.loadError') || 'Chyba načítání plateb');

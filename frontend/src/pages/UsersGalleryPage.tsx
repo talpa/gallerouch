@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../components/PublicLayout';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import axios from 'axios';
 
 interface User {
@@ -23,15 +24,6 @@ const UsersGalleryPage: React.FC = () => {
 
   const isAuthor = filterType === 'author';
   const pageTitle = isAuthor ? t('gallery.authors') : t('gallery.owners');
-
-  const normalizeArrayPayload = <T,>(payload: any): T[] => {
-    if (Array.isArray(payload)) return payload;
-    if (payload && Array.isArray(payload.data)) return payload.data;
-    if (payload && Array.isArray(payload.rows)) return payload.rows;
-    if (payload && Array.isArray(payload.items)) return payload.items;
-    if (payload && Array.isArray(payload.users)) return payload.users;
-    return [];
-  };
 
   useEffect(() => {
     async function load() {

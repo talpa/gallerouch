@@ -11,6 +11,7 @@ import Badge from 'react-bootstrap/Badge';
 import { useAppSelector } from '../hooks';
 import { useTranslation } from 'react-i18next';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import ArtworkImageManager from './ArtworkImageManager';
 import ArtworkEventsManager from './ArtworkEventsManager';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -88,7 +89,7 @@ const UserArtworkManager: React.FC = () => {
       const res = await axios.get('/api/auth/artwork-types', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setArtworkTypes(res.data);
+      setArtworkTypes(normalizeArrayPayload<{ id: number; name: string }>(res.data));
     } catch (err) {
       console.error('Failed to load artwork types:', err);
     }
@@ -114,7 +115,7 @@ const UserArtworkManager: React.FC = () => {
       const res = await axios.get('/api/auth/users/list', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(res.data);
+      setUsers(normalizeArrayPayload<{ id: number; username: string }>(res.data));
     } catch (err) {
       console.error('Failed to load users:', err);
       // Fallback - pokud endpoint neexistuje, nebude fatální
@@ -127,7 +128,8 @@ const UserArtworkManager: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Filtruj jen artwork aktuálního uživatele
-      const userArtworks = res.data.filter((art: any) => art.userId === user?.id);
+      const allArtworks = normalizeArrayPayload<UserArtwork>(res.data);
+      const userArtworks = allArtworks.filter((art: UserArtwork) => art.userId === user?.id);
       setArtworks(userArtworks);
     } catch (err) {
       console.error('Failed to load artworks:', err);
@@ -137,7 +139,7 @@ const UserArtworkManager: React.FC = () => {
   const loadAuthoredArtworks = async () => {
     try {
       const res = await axios.get(`/api/artworks/by-author/${user?.id}`);
-      setArtworks(res.data);
+      setArtworks(normalizeArrayPayload<UserArtwork>(res.data));
     } catch (err) {
       console.error('Failed to load authored artworks:', err);
     }

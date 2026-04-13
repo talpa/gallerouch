@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { fetchArtworks } from '../api/artworks';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import { Modal, Button, Form, Tabs, Tab } from 'react-bootstrap';
 import axios from 'axios';
 import ArtworkImageManager from './ArtworkImageManager';
@@ -75,11 +76,11 @@ const UserGalleryBrowser: React.FC = () => {
       setLoading(true);
       const endpoint = browseMode === 'authors' ? '/api/artworks/authors' : '/api/artworks/owners';
       const response = await axios.get(endpoint);
-      setUsers(response.data);
+      setUsers(normalizeArrayPayload<User>(response.data));
       
       // Load all artwork types for edit modal
       const typesRes = await axios.get('/api/auth/artwork-types');
-      setAllArtworkTypes(typesRes.data);
+      setAllArtworkTypes(normalizeArrayPayload<ArtworkType>(typesRes.data));
     } catch (err: any) {
       setError(err?.message || t('messages.error'));
     } finally {
@@ -96,7 +97,7 @@ const UserGalleryBrowser: React.FC = () => {
       
       const statusParam = selectedStatus !== 'all' ? `?status=${selectedStatus}` : '';
       const response = await axios.get(endpoint + statusParam);
-      setArtworks(response.data);
+      setArtworks(normalizeArrayPayload<Artwork>(response.data));
     } catch (err: any) {
       setError(err?.message || t('messages.error'));
       setArtworks([]);

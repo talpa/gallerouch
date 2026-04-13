@@ -70,7 +70,24 @@ export const getEvents = async (
       headers: { Authorization: `Bearer ${token}` },
       params: { status, limit, offset }
     });
-    return response.data;
+    const payload = response.data as any;
+
+    if (Array.isArray(payload)) {
+      return { events: payload, total: payload.length };
+    }
+
+    if (payload && Array.isArray(payload.events)) {
+      return {
+        events: payload.events,
+        total: typeof payload.total === 'number' ? payload.total : payload.events.length,
+      };
+    }
+
+    if (payload && Array.isArray(payload.rows)) {
+      return { events: payload.rows, total: payload.rows.length };
+    }
+
+    return { events: [], total: 0 };
   } catch (error) {
     throw (error as AxiosError).response?.data || error;
   }

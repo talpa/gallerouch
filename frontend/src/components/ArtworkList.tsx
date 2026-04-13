@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { fetchArtworks, fetchArtworkEvents, ArtworkEvent } from '../api/artworks';
 import { formatPrice } from '../utils/currency';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 import { Modal, Button, Form, Tabs, Tab } from 'react-bootstrap';
 import axios from 'axios';
 import ArtworkImageManager from './ArtworkImageManager';
@@ -62,14 +63,6 @@ const ArtworkList: React.FC = () => {
     userId: 0,
     artworkTypeId: 0
   });
-
-  const normalizeArrayPayload = <T,>(payload: any): T[] => {
-    if (Array.isArray(payload)) return payload;
-    if (payload && Array.isArray(payload.data)) return payload.data;
-    if (payload && Array.isArray(payload.rows)) return payload.rows;
-    if (payload && Array.isArray(payload.items)) return payload.items;
-    return [];
-  };
 
   // Funkce pro překlad statusu
   const getStatusLabel = (status: ArtworkStatus): string => {
