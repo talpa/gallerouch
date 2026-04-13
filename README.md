@@ -1,3 +1,7 @@
+# Stabilizační Runbook
+
+Po každém restartu serveru nebo při potížích postupujte podle [RUNBOOK_STABILIZACE.md](RUNBOOK_STABILIZACE.md).
+
 # Gallerouch
 
 Moderní galerie a e-shop pro malířku
