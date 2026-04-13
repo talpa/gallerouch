@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 
 const API_BASE = '/api/auth';
 
@@ -18,7 +19,15 @@ export const getSettings = async (token: string): Promise<SettingsResponse> => {
   const response = await axios.get(`${API_BASE}/settings`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  return response.data;
+  const payload = response.data as any;
+
+  if (Array.isArray(payload)) {
+    return { settings: payload };
+  }
+
+  return {
+    settings: normalizeArrayPayload<Setting>(payload, ['settings']),
+  };
 };
 
 export const getSetting = async (token: string, key: string): Promise<Setting> => {

@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { normalizeArrayPayload } from '../utils/apiPayload';
 
 const API_BASE = '/api/auth';
 
@@ -138,7 +139,16 @@ export const getArtworkApprovals = async (
       headers: { Authorization: `Bearer ${token}` },
       params: { approved, limit, offset }
     });
-    return response.data;
+    const payload = response.data as any;
+
+    if (Array.isArray(payload)) {
+      return { artworks: payload, total: payload.length };
+    }
+
+    const artworks = normalizeArrayPayload<ArtworkApproval>(payload, ['artworks']);
+    const total = typeof payload?.total === 'number' ? payload.total : artworks.length;
+
+    return { artworks, total };
   } catch (error) {
     throw (error as AxiosError).response?.data || error;
   }

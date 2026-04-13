@@ -6,6 +6,7 @@ const DEFAULT_ARRAY_KEYS = [
   'artworks',
   'events',
   'payments',
+  'settings',
   'types',
   'results',
 ];
