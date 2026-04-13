@@ -124,7 +124,7 @@ const AdminArtworkTypesManager: React.FC = () => {
       {success && <Alert variant="success" onClose={() => setSuccess(null)} dismissible>{success}</Alert>}
 
       <div className="mb-3">
-        <Button variant="success" onClick={handleNewType}>➕ Přidat nový typ</Button>
+        <Button variant="success" onClick={handleNewType}>Přidat nový typ</Button>
       </div>
 
       <Table striped bordered hover responsive>

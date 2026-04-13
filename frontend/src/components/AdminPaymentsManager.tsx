@@ -263,7 +263,7 @@ const AdminPaymentsManager: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>{t('payments.title') || 'Správa plateb'}</h2>
         <Button variant="primary" onClick={loadPayments}>
-          🔄 {t('buttons.refresh') || 'Obnovit'}
+           {t('buttons.refresh') || 'Obnovit'}
         </Button>
       </div>
 
@@ -302,14 +302,14 @@ const AdminPaymentsManager: React.FC = () => {
             onClick={() => setViewMode('all')}
             size="sm"
           >
-            📋 {t('payments.viewAll') || 'Všechny platby'}
+              {t('payments.viewAll') || 'Všechny platby'}
           </Button>
           <Button 
             variant={viewMode === 'by-user' ? 'primary' : 'outline-primary'}
             onClick={() => setViewMode('by-user')}
             size="sm"
           >
-            👥 {t('payments.viewByUser') || 'Podle uživatele'}
+              {t('payments.viewByUser') || 'Podle uživatele'}
           </Button>
         </div>
       )}
@@ -425,7 +425,7 @@ const AdminPaymentsManager: React.FC = () => {
                               size="sm"
                               onClick={() => handleOpenConfirmModal(payment)}
                             >
-                              ✓ {t('buttons.confirmPayment') || 'Potvrdit'}
+                                {t('buttons.confirmPayment') || 'Potvrdit'}
                             </Button>
                           )}
                           {payment.status === 'paid' && !payment.invoiceSentAt && (
@@ -434,7 +434,7 @@ const AdminPaymentsManager: React.FC = () => {
                               size="sm"
                               onClick={() => handleOpenInvoiceModal(payment)}
                             >
-                              📄 {t('buttons.sendInvoice') || 'Faktura'}
+                                {t('buttons.sendInvoice') || 'Faktura'}
                             </Button>
                           )}
                           {payment.invoiceSentAt && (
@@ -532,7 +532,7 @@ const AdminPaymentsManager: React.FC = () => {
                         size="sm"
                         onClick={() => handleOpenConfirmModal(payment)}
                       >
-                        ✓ {t('buttons.confirmPayment') || 'Potvrdit'}
+                          {t('buttons.confirmPayment') || 'Potvrdit'}
                       </Button>
                     )}
                     {payment.status === 'paid' && !payment.invoiceSentAt && (
@@ -541,7 +541,7 @@ const AdminPaymentsManager: React.FC = () => {
                         size="sm"
                         onClick={() => handleOpenInvoiceModal(payment)}
                       >
-                        📄 {t('buttons.sendInvoice') || 'Faktura'}
+                          {t('buttons.sendInvoice') || 'Faktura'}
                       </Button>
                     )}
                     {payment.invoiceSentAt && (
@@ -629,7 +629,7 @@ const AdminPaymentsManager: React.FC = () => {
             {t('buttons.cancel') || 'Zrušit'}
           </Button>
           <Button variant="success" onClick={handleConfirmPayment}>
-            ✓ {t('buttons.confirmPayment') || 'Potvrdit platbu'}
+            {t('buttons.confirmPayment') || 'Potvrdit platbu'}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -669,7 +669,7 @@ const AdminPaymentsManager: React.FC = () => {
             {t('buttons.cancel') || 'Zrušit'}
           </Button>
           <Button variant="primary" onClick={handleSendInvoice}>
-            📄 {t('buttons.sendInvoice') || 'Odeslat fakturu'}
+            {t('buttons.sendInvoice') || 'Odeslat fakturu'}
           </Button>
         </Modal.Footer>
       </Modal>

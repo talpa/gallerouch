@@ -247,7 +247,7 @@ const AdminGalleryManager: React.FC = () => {
       <div className="mb-3">
         <Button variant="success" onClick={handleNewArtwork}>{t('gallery.newArtwork')}</Button>
         {' '}
-        <Button variant="primary" onClick={loadArtworks}>🔄 {t('buttons.refresh')}</Button>
+        <Button variant="primary" onClick={loadArtworks}>{t('buttons.refresh')}</Button>
       </div>
 
       {/* Filtry a kontroly */}
@@ -508,7 +508,7 @@ const AdminGalleryManager: React.FC = () => {
                   </Form.Group>
                 )}
                 <Button variant="success" type="submit">
-                  {editingArtwork ? `💾 ${t('buttons.save')}` : `✅ ${t('buttons.create')}`}
+                  {editingArtwork ? t('buttons.save') : t('buttons.create')}
                 </Button>
               </Form>
             </Tab>

@@ -11,7 +11,22 @@ export interface ArtworkEvent {
 
 export async function fetchArtworks(): Promise<Artwork[]> {
   const res = await axios.get<Artwork[]>('/api/artworks/approved');
-  return res.data;
+  const data = res.data as any;
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (data && Array.isArray(data.artworks)) {
+    return data.artworks;
+  }
+
+  if (data && Array.isArray(data.rows)) {
+    return data.rows;
+  }
+
+  console.warn('Unexpected /api/artworks/approved response shape:', data);
+  return [];
 }
 
 export async function fetchArtworkEvents(): Promise<ArtworkEvent[]> {
