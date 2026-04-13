@@ -90,7 +90,7 @@ const UsersGalleryPage: React.FC = () => {
                   <h3 className="user-name">{user.name}</h3>
                   <p className="user-email">{user.email}</p>
                   <div className="user-artwork-count">
-                    <strong>{user.count}</strong> {user.count === 1 ? 'dílo' : 'děl'}
+                    <strong>{user.count}</strong> {user.count === 1 ? 'dílo' : (user.count >= 2 && user.count <= 4 ? 'díla' : 'děl')}
                   </div>
                 </div>
               </div>
