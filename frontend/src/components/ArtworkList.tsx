@@ -63,6 +63,14 @@ const ArtworkList: React.FC = () => {
     artworkTypeId: 0
   });
 
+  const normalizeArrayPayload = <T,>(payload: any): T[] => {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    if (payload && Array.isArray(payload.items)) return payload.items;
+    return [];
+  };
+
   // Funkce pro překlad statusu
   const getStatusLabel = (status: ArtworkStatus): string => {
     const statusMap: Record<ArtworkStatus, string> = {
@@ -159,14 +167,14 @@ const ArtworkList: React.FC = () => {
         
         // Load artwork types
         const typesRes = await axios.get('/api/auth/artwork-types');
-        setArtworkTypes(typesRes.data);
+        setArtworkTypes(normalizeArrayPayload(typesRes.data));
         
         // Load users if admin
         if (user?.role === 'admin' && token) {
           const usersRes = await axios.get('/api/auth/users', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setUsers(usersRes.data);
+          setUsers(normalizeArrayPayload(usersRes.data));
         }
       } catch (err: any) {
         setError(err?.message || t('messages.error'));
